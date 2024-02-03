@@ -1,0 +1,6 @@
+.git/
+.idea/
+
+tests/
+
+server/__pycache__/
