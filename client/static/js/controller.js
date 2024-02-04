@@ -1,37 +1,52 @@
-function buttonClicked(buttonNumber) {
-    console.log('Button ' + buttonNumber + ' clicked!');
-    // You can add your button click logic here
+const joystickContainer = document.getElementById('joystick-container');
+const joystickHandle = document.getElementById('joystick-handle');
 
-    navigator.vibrate(200); // vibrate for 200ms
-    navigator.vibrate([80, 20, 80, 20, 80, 20, 80, 20, 80, 20]); // Vibrate 'SOS' in Morse.
+let isJoystickPressed = false;
+
+joystickHandle.addEventListener('mousedown', handleJoystickPress);
+joystickHandle.addEventListener('touchstart', handleJoystickPress);
+
+document.addEventListener('mouseup', handleJoystickRelease);
+document.addEventListener('touchend', handleJoystickRelease);
+
+document.addEventListener('mousemove', handleJoystickMove);
+document.addEventListener('touchmove', handleJoystickMove);
+
+function handleJoystickPress(event) {
+    event.preventDefault();
+    isJoystickPressed = true;
 }
 
+function handleJoystickRelease() {
+    isJoystickPressed = false;
+}
 
-let isButtonHeld = false;
+function handleJoystickMove(event) {
+    if (isJoystickPressed) {
+        const containerRect = joystickContainer.getBoundingClientRect();
+        let touch;
+        try {
+            touch = event.touches[0];
+        } catch (error) {
+            console.log(error)
+        }
 
-function shoot1() {
-    if (isButtonHeld) {
-        navigator.vibrate([60, 15]); // Vibrate 'SOS' in Morse.
-        console.log("shooting");
+        let containerHL = containerRect.width / 2
+
+        let x = (event.clientX || touch.clientX) - (containerRect.left + containerRect.width / 2);
+        let y = (event.clientY || touch.clientY) - (containerRect.top + containerRect.height / 2);
+
+        const distance = Math.sqrt((x) ** 2 + (y) ** 2);
+
+        if (distance <= containerHL) {
+            joystickHandle.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+
+            console.log("moved", x, -y, distance)
+
+            socket.emit("movement", {dx: x/containerHL, dy: -y/containerHL}, (ack) => {
+                console.log(ack);
+            });
+        }
+
     }
 }
-
-let b = document.getElementById("button")
-let buttonHoldInterval;
-
-b.addEventListener('touchstart', () => {
-    event.preventDefault();
-    isButtonHeld = true;
-    // Call the handleButtonHold function immediately
-    shoot1();
-
-    // Set an interval to call the handleButtonHold function repeatedly
-    buttonHoldInterval = setInterval(shoot1, 90); // Adjust the interval as needed
-});
-
-// Event listener for mouse up (button release)
-button.addEventListener('touchend', () => {
-    isButtonHeld = false;
-    // Clear the interval when the button is released
-    clearInterval(buttonHoldInterval);
-});

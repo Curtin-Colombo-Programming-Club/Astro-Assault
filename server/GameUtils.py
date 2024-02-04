@@ -43,7 +43,7 @@ class Ship(pygame.sprite.Sprite):
         return self.__angle
 
     def dVelocity(self, _dx, _dy):
-        ...
+        print(_dx, _dy)
 
     def update(self, *args, **kwargs):
         super().update(args, kwargs)
