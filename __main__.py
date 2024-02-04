@@ -1,6 +1,10 @@
 import sys
+from time import sleep
+
 from flask import Flask
 from flask_socketio import SocketIO
+from server import GLOBALS
+import server
 from server.GameUtils import *
 from server.Controllers import *
 import threading
@@ -11,23 +15,19 @@ pygame.init()
 
 Players = Players()
 
-Players.newPlayer("4322222")
-
 SocketController(socketio, Players).control()
 HTTPController(app, Players).control()
 
-GAMERUNNING = False
+# GLOBALS
+GLOBALS.GAMERUNNING = False
 
 
 # Set up display
 def Game():
-    global GAMERUNNING
-
-    if GAMERUNNING:
+    if GLOBALS.GAMERUNNING:
         return -1
 
-    GAMERUNNING = True
-    width, height = 800, 600
+    GLOBALS.GAMERUNNING = True
     screen = pygame.display.set_mode((10000, 10000), pygame.FULLSCREEN)
     pygame.display.set_caption("Basic Pygame Example")
 
@@ -35,7 +35,9 @@ def Game():
     white = (255, 255, 255)
     black = (0, 0, 0)
 
-    print(screen.get_width(), screen.get_height())
+    GLOBALS.WIDTH = screen.get_width()
+    GLOBALS.HEIGHT = screen.get_height()
+    print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
 
     print(Players)
 
@@ -53,6 +55,7 @@ def Game():
 
         # Draw game elements here
         Players.draw(screen)
+        Players.update()
 
         # Update the display
         pygame.display.flip()
@@ -61,8 +64,10 @@ def Game():
         pygame.time.Clock().tick(60)
 
 
-"""GameThread = threading.Thread(target=Game)
+GameThread = threading.Thread(target=Game)
 GameThread.daemon = True
-GameThread.start()"""
+GameThread.start()
+
+sleep(2)
 
 socketio.run(app, host="0.0.0.0", allow_unsafe_werkzeug=True)

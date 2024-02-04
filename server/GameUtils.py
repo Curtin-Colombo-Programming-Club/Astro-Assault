@@ -1,16 +1,20 @@
 import datetime
 import math
+import random
+from server import GLOBALS
 import pygame
 
 
 class Ship(pygame.sprite.Sprite):
     def __init__(self, _x, _y):
-        super().__init__()
+        pygame.sprite.Sprite.__init__(self)
         self.__im = pygame.transform.scale(pygame.image.load("server/images/ship.png"), (200, 300))
         self.__rect = self.__im.get_rect()
-        self.__rect.center = [_x, _y]
+        self.rect.center = (_x, _y)
         self.__angle = 0
         self.__vel = [0, 0]
+
+        print(_x, _y)
 
     @property
     def image(self):
@@ -18,7 +22,7 @@ class Ship(pygame.sprite.Sprite):
 
     @property
     def rect(self):
-        return self.__im.get_rect()
+        return self.__rect
 
     @property
     def center(self):
@@ -42,7 +46,7 @@ class Ship(pygame.sprite.Sprite):
         ...
 
     def update(self, *args, **kwargs):
-        ...
+        super().update(args, kwargs)
 
 
 class Player:
@@ -103,8 +107,10 @@ class Players(pygame.sprite.Group):
                 super().add(_player.ship)
 
     def newPlayer(self, _token: str) -> Player:
-        _player = Player(_token, Ship(38, 90))
+        _player = Player(_token, Ship(random.randint(0, GLOBALS.WIDTH), random.randint(0, GLOBALS.HEIGHT)))
         self.add(_player)
+
+        print(_player.ship.center)
 
         return _player
 

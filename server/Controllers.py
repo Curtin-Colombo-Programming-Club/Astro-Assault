@@ -44,6 +44,8 @@ class SocketController:
 
         @self.__io.on("movement")
         def movement_handler(data):
+            returnData = {"status": -1, "message": ""}
+
             _dx = data["dx"]
             _dy = data["dy"]
             _token = request.cookies.get('auth_token')
@@ -53,6 +55,13 @@ class SocketController:
             if _player:
                 _ship = _player.ship
                 _ship.dVelocity(_dx, _dy)
+                returnData["status"] = 200
+                returnData["message"] = "success!"
+            else:
+                returnData["status"] = 404
+                returnData["message"] = "player not found!"
+
+            return returnData
 
         @self.__io.on("disconnect")
         def disconnect_handler():
