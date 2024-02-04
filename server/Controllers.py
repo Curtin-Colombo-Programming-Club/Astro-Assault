@@ -16,9 +16,11 @@ class SocketController:
         def connect_handler():
             client_address = request.remote_addr
             print(f"Client connected from IP address: {client_address}")
-            print("connected", request.sid)
+            print("connected, sid:", request.sid)
             _token = request.args.get('token')
             _player = self.__players[_token]
+
+            print(f"Existing player;\n{_player}" if _player else "Creating new Player")
 
             if _player is None:
                 uuid1 = uuid.uuid1()
@@ -27,9 +29,10 @@ class SocketController:
                 _player = self.__players.newPlayer(f"{uuid4}.{uuid3}")
                 _token = _player.token
 
-            _player.connect()
+                print(f"New player;\n{_player}")
 
-            print(_player, "player")
+            _player.connect()
+            print(f"player online;\n{_player}")
 
             self.__sessions[request.sid] = _player
 
@@ -39,8 +42,21 @@ class SocketController:
             emit('cookie_set',
                  {'cookie_name': 'auth_token', 'cookie_value': _token, 'expiry_time': (datetime.datetime.now()+datetime.timedelta(hours=1)).timestamp()})
 
+        @self.__io.on("movement")
+        def movement_handler(data):
+            _dx = data["dx"]
+            _dy = data["dy"]
+            _token = request.cookies.get('auth_token')
+
+            _player = self.__players[_token]
+
+            if _player:
+                _ship = _player.ship
+                _ship.dVelocity(_dx, _dy)
+
         @self.__io.on("disconnect")
         def disconnect_handler():
+            print(request.cookies.get('auth_token'), "disconnect!")
 
             _player = self.__sessions[request.sid]
             _player.disconnect()
@@ -63,5 +79,5 @@ class HTTPController:
 
         @self.__app.route("/test", methods=["GET"])
         def test():
-            print(request.cookies.get('auth_token'))
+            print(request.cookies.get('auth_token'), "/test")
             return render_template("test2.html")

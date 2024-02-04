@@ -1,6 +1,5 @@
 import datetime
 import math
-
 import pygame
 
 
@@ -19,7 +18,7 @@ class Ship(pygame.sprite.Sprite):
 
     @property
     def rect(self):
-        return self.__rect
+        return self.__im.get_rect()
 
     @property
     def center(self):
@@ -38,6 +37,9 @@ class Ship(pygame.sprite.Sprite):
         theta = math.atan2(self.y, self.x)
         self.__angle = math.degrees(theta)
         return self.__angle
+
+    def dVelocity(self, _dx, _dy):
+        ...
 
     def update(self, *args, **kwargs):
         ...
@@ -97,7 +99,7 @@ class Players(pygame.sprite.Group):
     def add(self, *_players):
         for _player in _players:
             if isinstance(_player, Player):
-                self.players[id(_player)] = _player
+                self.players[_player.token] = _player
                 super().add(_player.ship)
 
     def newPlayer(self, _token: str) -> Player:
