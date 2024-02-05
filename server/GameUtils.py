@@ -8,7 +8,7 @@ import pygame
 class Ship(pygame.sprite.Sprite):
     def __init__(self, _x, _y):
         pygame.sprite.Sprite.__init__(self)
-        self.__im = pygame.transform.scale(pygame.image.load("server/images/ship.png"), (200, 300))
+        self.__im = pygame.transform.scale(pygame.image.load("server/images/ship.svg"), (200, 300))
         self.__rect = self.__im.get_rect()
         self.rect.center = (_x, _y)
         self.__angle = 0
@@ -18,7 +18,7 @@ class Ship(pygame.sprite.Sprite):
 
     @property
     def image(self):
-        return self.__im
+        return pygame.transform.rotate(self.__im, self.angle)
 
     @property
     def rect(self):
@@ -30,24 +30,24 @@ class Ship(pygame.sprite.Sprite):
 
     @property
     def x(self):
-        return self.rect.x
+        return self.rect.centerx
 
     @property
     def y(self):
-        return self.rect.y
+        return self.rect.centery
 
     @property
     def angle(self):
-        theta = math.atan2(self.y, self.x)
+        theta = math.atan2(-self.__vel[0], -self.__vel[1])
         self.__angle = math.degrees(theta)
         return self.__angle
 
     def dVelocity(self, _dx, _dy):
-        # print(_dx, _dy)
-        ...
+        self.__vel = (10*_dx, 10*_dy)
 
     def update(self, *args, **kwargs):
-        super().update(args, kwargs)
+        self.__rect.center = (self.x + self.__vel[0], self.y + self.__vel[1])
+
 
 
 class Player:

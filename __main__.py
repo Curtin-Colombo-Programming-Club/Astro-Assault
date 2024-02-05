@@ -64,9 +64,9 @@ def Game():
         pygame.time.Clock().tick(60)
 
 
-"""GameThread = threading.Thread(target=Game)
+GameThread = threading.Thread(target=Game)
 GameThread.daemon = True
-GameThread.start()"""
+GameThread.start()
 
 sleep(2)
 

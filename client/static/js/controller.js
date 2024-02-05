@@ -36,23 +36,30 @@ function handleJoystickMove(event) {
         let x = (event.clientX || touch.clientX) - (containerRect.left + containerRect.width / 2);
         let y = (event.clientY || touch.clientY) - (containerRect.top + containerRect.height / 2);
 
-        let dx = x/containerHL;
-        let dy = -y/containerHL;
+        let dx = x / containerHL;
+        let dy = y / containerHL;
 
         const distance = Math.sqrt((x) ** 2 + (y) ** 2);
 
-        if (distance <= containerHL) {
+        if (distance > containerHL) {
+            let theta = Math.atan2(dy, dx);
+            dx = Math.cos(theta);
+            dy = Math.sin(theta);
 
-            console.log("moved", x, -y, distance)
-
-            socket.emit("movement", {dx: x/containerHL, dy: -y/containerHL}, (ack) => {
-                console.log(ack);
-
-                if (ack.status == 200) {
-                    joystickHandle.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-                }
-            });
+            x = dx * containerHL;
+            y = dy * containerHL;
         }
+
+        console.log("moved", x, y, distance)
+
+        socket.emit("movement", { dx: dx, dy: dy }, (ack) => {
+            console.log(ack);
+
+            if (ack.status == 200) {
+                joystickHandle.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+            }
+        });
+
 
     }
 }
