@@ -9,28 +9,32 @@ class Ship(pygame.sprite.Sprite):
     def __init__(self, _x, _y):
         pygame.sprite.Sprite.__init__(self)
         self.__im = pygame.transform.scale(pygame.image.load("server/images/ship.svg"), (200, 300))
+        self.__imc = self.__im
         self.__rect = self.__im.get_rect()
         self.rect.center = (_x, _y)
-        self.__angle = 0
+        self.__angle = 45
         self.__vel = [0, 0]
+        self.__speed = 0
 
         print(_x, _y)
 
     @property
     def image(self):
-        return pygame.transform.rotate(self.__im, self.angle)
+        self.__imc = pygame.transform.rotate(self.__im, self.angle)
+        return self.__imc
 
     @property
     def rect(self):
+        self.__rect = self.__imc.get_rect(center=self.center)
         return self.__rect
 
     @property
     def center(self):
-        return self.rect.center
+        return self.__rect.center
 
     @property
     def x(self):
-        return self.rect.centerx
+        return self.__rect.centerx
 
     @property
     def y(self):
@@ -38,15 +42,23 @@ class Ship(pygame.sprite.Sprite):
 
     @property
     def angle(self):
-        theta = math.atan2(-self.__vel[0], -self.__vel[1])
-        self.__angle = math.degrees(theta)
+        """theta = math.atan2(-self.__vel[0], -self.__vel[1])
+        self.__angle = math.degrees(theta)"""
         return self.__angle
 
-    def dVelocity(self, _dx, _dy):
-        self.__vel = (10*_dx, 10*_dy)
+    def sockUpdate(self, _dx, _dy):
+        self.__angle -= 5* _dx
+        self.__speed += _dy
+
+        if abs(self.__angle) > 180:
+            self.__angle = -(self.__angle/abs(self.__angle) * 360 - self.__angle)
+
+        if abs(self.__speed) > 50:
+            self.__speed = 50 * self.__speed / abs(self.__speed)
 
     def update(self, *args, **kwargs):
-        self.__rect.center = (self.x + self.__vel[0], self.y + self.__vel[1])
+        self.__rect.center = (self.x + self.__speed * math.sin(math.radians(self.angle)),
+                              self.y + self.__speed * math.cos(math.radians(self.angle)))
 
 
 

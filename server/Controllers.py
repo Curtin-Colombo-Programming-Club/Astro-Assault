@@ -54,7 +54,7 @@ class SocketController:
 
             if _player:
                 _ship = _player.ship
-                _ship.dVelocity(_dx, _dy)
+                _ship.sockUpdate(_dx, _dy)
                 returnData["status"] = 200
                 returnData["message"] = "success!"
             else:
