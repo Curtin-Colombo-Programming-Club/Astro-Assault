@@ -86,6 +86,11 @@ class HTTPController:
             print(request.cookies.get('auth_token'))
             return render_template("controller.html")
 
+        @self.__app.route("/controller2", methods=["GET"])
+        def controller():
+            print(request.cookies.get('auth_token'))
+            return render_template("controller2.html")
+
         @self.__app.route("/test", methods=["GET"])
         def test():
             print(request.cookies.get('auth_token'), "/test")

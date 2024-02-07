@@ -47,7 +47,7 @@ class Ship(pygame.sprite.Sprite):
         return self.__angle
 
     def sockUpdate(self, _dx, _dy):
-        self.__angle -= 5* _dx
+        self.__angle -= 5 * _dx
         self.__speed += _dy
 
         if abs(self.__angle) > 180:
