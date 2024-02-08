@@ -22,8 +22,6 @@ GLOBALS.MISSILES = Missiles()
 
 SocketController(socketio).control()
 HTTPController(app).control()
-SocketController(socketio).control()
-HTTPController(app).control()
 
 # GLOBALS
 GLOBALS.GAMERUNNING = False

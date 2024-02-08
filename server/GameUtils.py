@@ -6,7 +6,6 @@ import pygame
 
 
 class _Sprite(pygame.sprite.Sprite):
-class _Sprite(pygame.sprite.Sprite):
     def __init__(self, _x, _y):
         super().__init__()
         self._im = pygame.surface.Surface((100, 100))
@@ -26,24 +25,18 @@ class _Sprite(pygame.sprite.Sprite):
     def image(self):
         self._imc = pygame.transform.rotate(self._im, self.angle)
         return self._imc
-        self._imc = pygame.transform.rotate(self._im, self.angle)
-        return self._imc
 
     @property
     def rect(self):
-        self._rect = self._imc.get_rect(center=self.center)
-        return self._rect
         self._rect = self._imc.get_rect(center=self.center)
         return self._rect
 
     @property
     def center(self):
         return self._rect.center
-        return self._rect.center
 
     @property
     def x(self):
-        return self._rect.centerx
         return self._rect.centerx
 
     @property
