@@ -33,7 +33,7 @@ class _Sprite(pygame.sprite.Sprite):
 
     @property
     def center(self):
-        return self._rect.center
+        return tuple(self._rect.center)
 
     @property
     def x(self):
@@ -208,6 +208,12 @@ class Ship(_Sprite):
     def primary_3_counter(self):
         return self._primary_3_counter
 
+    def dealDamage(self, _type: int):
+        if _type == 1:
+            self._health -= 1
+        elif _type == 2:
+            self._health -= 10
+
     def sockMoveUpdate(self, _dx, _dy):
         self._angle -= 60 * ((GLOBALS.W_RATIO + GLOBALS.H_RATIO) / 2) * (1 / GLOBALS.FPS) * _dx
         self._speed += 3 * GLOBALS.W_RATIO * (1 / GLOBALS.FPS) * _dy
@@ -235,9 +241,14 @@ class Ship(_Sprite):
                 self._primary_3_counter = 0
                 self._primary_chamber = "left" if self.primary_chamber == "right" else "right"
         elif _n == 3:
-            print("adding missile")
             GLOBALS.MISSILES.newMissile(_ship=self)
             self._secondary_chamber = "left" if self._secondary_chamber == "right" else "right"
+
+    def __str__(self):
+        return (f"Ship(\n"
+                f"\tPos: {self.center}\n"
+                f"\tHealth: {self._health}\n"
+                f")")
 
 
 class Player:
@@ -286,7 +297,6 @@ class Players(pygame.sprite.Group):
         self.add(_players)
         _ships = [_player.ship for _player in _players]
 
-
         super().__init__(_ships)
 
     @property
@@ -310,3 +320,32 @@ class Players(pygame.sprite.Group):
 
     def __getitem__(self, _token) -> Player:
         return self.__players.get(_token, None)
+
+
+def check_collision(_TSprite, _TSprite2) -> bool:
+    if _TSprite.ship != _TSprite2 and _TSprite.rect.colliderect(_TSprite2.rect):
+        try:
+            _tc = _TSprite.center
+            _a = _TSprite2.image.get_at((_TSprite.center[0] - _TSprite2.rect.left, _TSprite.center[1] - _TSprite2.rect.top))[3]
+            if _a:
+                return True
+        except IndexError:
+            pass
+    else:
+        return False
+
+
+def laser_ship_collision(lSprite: Laser, sSprite: Ship) -> bool:
+    if lSprite.ship != sSprite:
+        sSprite.dealDamage(1)
+        lSprite.kill()
+        print("contact ship:", sSprite, "\nowner ship:", lSprite.ship)
+    return True
+
+
+def missile_ship_collision(mSprite: Missile, sSprite: Ship) -> bool:
+    if mSprite.ship != sSprite:
+        sSprite.dealDamage(2)
+        #mSprite.kill()
+    #print("contact ship:", sSprite, "\nowner ship:", mSprite.ship)
+    return True

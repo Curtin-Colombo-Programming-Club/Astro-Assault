@@ -74,11 +74,25 @@ def Game():
         GLOBALS.PLAYERS.update()
 
         # Check for collisions between the two groups
-        collisions = pygame.sprite.groupcollide(GLOBALS.MISSILES, GLOBALS.PLAYERS, False, False)
+        collisions1 = pygame.sprite.groupcollide(GLOBALS.MISSILES, GLOBALS.LASERS, True, True)
+        collisions2 = pygame.sprite.groupcollide(GLOBALS.LASERS, GLOBALS.PLAYERS,
+                                                 True, False,
+                                                 check_collision)
+        collisions3 = pygame.sprite.groupcollide(GLOBALS.MISSILES, GLOBALS.PLAYERS,
+                                                 True, False,
+                                                 check_collision)
 
-        for sprite1, sprite2_list in collisions.items():
+        for sprite1, sprite2_list in collisions2.items():
             for sprite2 in sprite2_list:
-                print(sprite1, sprite2_list)
+                sprite2.dealDamage(1)
+                print(sprite1, sprite2)
+                pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
+                pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)
+
+        for sprite1, sprite2_list in collisions3.items():
+            for sprite2 in sprite2_list:
+                sprite2.dealDamage(2)
+                print(sprite1, sprite2)
                 pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
                 pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)
 
@@ -91,9 +105,9 @@ def Game():
         GLOBALS.FPS = clk.get_fps()
 
 
-GameThread = threading.Thread(target=Game)
+"""GameThread = threading.Thread(target=Game)
 GameThread.daemon = True
-GameThread.start()
+GameThread.start()"""
 
 sleep(2)
 

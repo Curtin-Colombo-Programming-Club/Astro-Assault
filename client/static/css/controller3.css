@@ -67,6 +67,9 @@ main {
 .button-container button {
     position: absolute;
     background-color: var(--color2);
+    background-size: 80%;
+    background-repeat: no-repeat;
+    background-position: center;
     border: 5px solid var(--color3);
     border-radius: 50%;
     width: 60px;
@@ -77,13 +80,18 @@ main {
 
 #button-1 {
     top: 90%;
+    background-image: url(/static/images/boost.png);
 }
 
 #button-2 {
     top: 70%;
     width: 90px;
+    background-image: url(/static/images/primary.png);
+    background-size: 60%;
+    background-position: center;
 }
 
 #button-3 {
     top: 50%;
+    background-image: url(/static/images/secondary.png);
 }
