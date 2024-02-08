@@ -6,7 +6,12 @@ import pygame
 
 
 class _Sprite(pygame.sprite.Sprite):
+class _Sprite(pygame.sprite.Sprite):
     def __init__(self, _x, _y):
+        super().__init__()
+        self._im = pygame.surface.Surface((100, 100))
+        self._imc = self._im
+        self._rect = self._im.get_rect()
         super().__init__()
         self._im = pygame.surface.Surface((100, 100))
         self._imc = self._im
@@ -14,9 +19,13 @@ class _Sprite(pygame.sprite.Sprite):
         self.rect.center = (_x, _y)
         self._angle = 0
         self._speed = 0
+        self._angle = 0
+        self._speed = 0
 
     @property
     def image(self):
+        self._imc = pygame.transform.rotate(self._im, self.angle)
+        return self._imc
         self._imc = pygame.transform.rotate(self._im, self.angle)
         return self._imc
 
@@ -24,13 +33,17 @@ class _Sprite(pygame.sprite.Sprite):
     def rect(self):
         self._rect = self._imc.get_rect(center=self.center)
         return self._rect
+        self._rect = self._imc.get_rect(center=self.center)
+        return self._rect
 
     @property
     def center(self):
         return self._rect.center
+        return self._rect.center
 
     @property
     def x(self):
+        return self._rect.centerx
         return self._rect.centerx
 
     @property
@@ -239,6 +252,7 @@ class Player:
         self.__lastOnline = datetime.datetime.now()
         self.__token = _token
         self.__ship = Ship(_x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT), _player=self)
+        self.__ship = Ship(_x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT), _player=self)
 
     @property
     def online(self):
@@ -278,6 +292,7 @@ class Players(pygame.sprite.Group):
         self.add(_players)
         _ships = [_player.ship for _player in _players]
 
+
         super().__init__(_ships)
 
     @property
@@ -291,6 +306,7 @@ class Players(pygame.sprite.Group):
                 super().add(_player.ship)
 
     def newPlayer(self, _token: str) -> Player:
+        _player = Player(_token)
         _player = Player(_token)
         self.add(_player)
 

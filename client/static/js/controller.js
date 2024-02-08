@@ -16,6 +16,7 @@ document.addEventListener('mousemove', handleJoystickMove);
 document.addEventListener('touchmove', handleJoystickMove);
 
 // functions
+// functions
 function sendMovement() {
     socket.emit("movement", { dx: joydx, dy: joydy }, (ack) => {
         //console.log(ack);

@@ -2,6 +2,7 @@ import sys
 from time import sleep
 
 import pygame.display
+import pygame.display
 from flask import Flask
 from flask_socketio import SocketIO
 from server import GLOBALS
@@ -19,6 +20,8 @@ GLOBALS.PLAYERS = Players()
 GLOBALS.LASERS = Lasers()
 GLOBALS.MISSILES = Missiles()
 
+SocketController(socketio).control()
+HTTPController(app).control()
 SocketController(socketio).control()
 HTTPController(app).control()
 
@@ -43,11 +46,14 @@ def Game():
     GLOBALS.HEIGHT = screen.get_height()
     GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
     GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
+    GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
+    GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
     print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
 
     print(Players)
 
     # Main game loop
+    clk = pygame.time.Clock()
     clk = pygame.time.Clock()
     while True:
         for event in pygame.event.get():
@@ -72,8 +78,12 @@ def Game():
 
         # Update the display
         pygame.display.update()
+        pygame.display.update()
 
         # Control the frame rate
+        clk.tick(60)
+
+        GLOBALS.FPS = clk.get_fps()
         clk.tick(60)
 
         GLOBALS.FPS = clk.get_fps()
