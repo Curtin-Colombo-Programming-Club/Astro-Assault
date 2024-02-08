@@ -73,6 +73,31 @@ class Laser(_Sprite):
         )
         self._imc = self._im
         self._angle = _angle
+        self._speed = -15 + _ship.speed
+        self._seconds = 0
+
+    @property
+    def ship(self):
+        return self._ship
+
+    def update(self, *args, **kwargs):
+        super().update()
+        self._seconds += 1 / GLOBALS.FPS
+
+        if self._seconds > 1:
+            self.kill()
+
+
+class Missile(_Sprite):
+    def __init__(self, _x, _y, _angle, _ship):
+        super().__init__(_x=_x, _y=_y)
+        self._ship = _ship
+        self._im = pygame.transform.scale(
+            _im := pygame.image.load(f"server/images/missile.svg"),
+            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+        )
+        self._imc = self._im
+        self._angle = _angle
         self._speed = -10 + _ship.speed
         self._seconds = 0
 
@@ -84,32 +109,7 @@ class Laser(_Sprite):
         super().update()
         self._seconds += 1 / GLOBALS.FPS
 
-        if self._seconds > 3:
-            self.kill()
-
-
-class Missile(_Sprite):
-    def __init__(self, _x, _y, _angle, _ship):
-        super().__init__(_x=_x, _y=_y)
-        self._ship = _ship
-        self._im = pygame.transform.scale(
-            _im := pygame.image.load(f"server/images/missile.svg"),
-            (_im.get_width() * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
-        )
-        self._imc = self._im
-        self._angle = _angle
-        self._speed = -8 + _ship.speed
-        self._seconds = 0
-
-    @property
-    def ship(self):
-        return self._ship
-
-    def update(self, *args, **kwargs):
-        super().update()
-        self._seconds += 1 / GLOBALS.FPS
-
-        if self._seconds > 3:
+        if self._seconds > 2:
             self.kill()
 
 
@@ -190,6 +190,7 @@ class Ship(_Sprite):
         self._primary_chamber = "right"
         self._secondary_chamber = "right"
         self._primary_3_counter = 0
+        self._health = 100
 
     @property
     def speed(self):

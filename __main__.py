@@ -6,25 +6,24 @@ import pygame.display
 from flask import Flask
 from flask_socketio import SocketIO
 from server import GLOBALS
-import server
 from server.GameUtils import *
 from server.Controllers import *
 import threading
 
+# GLOBALS
+GLOBALS.PLAYERS = Players()
+GLOBALS.LASERS = Lasers()
+GLOBALS.MISSILES = Missiles()
+GLOBALS.GAMERUNNING = False
+
+# inits
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 pygame.init()
 
-# globals
-GLOBALS.PLAYERS = Players()
-GLOBALS.LASERS = Lasers()
-GLOBALS.MISSILES = Missiles()
-
+# controls
 SocketController(socketio).control()
 HTTPController(app).control()
-
-# GLOBALS
-GLOBALS.GAMERUNNING = False
 
 
 # Set up display
@@ -74,14 +73,19 @@ def Game():
         GLOBALS.PLAYERS.draw(screen)
         GLOBALS.PLAYERS.update()
 
+        # Check for collisions between the two groups
+        collisions = pygame.sprite.groupcollide(GLOBALS.MISSILES, GLOBALS.PLAYERS, False, False)
+
+        for sprite1, sprite2_list in collisions.items():
+            for sprite2 in sprite2_list:
+                print(sprite1, sprite2_list)
+                pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
+                pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)
+
         # Update the display
-        pygame.display.update()
         pygame.display.update()
 
         # Control the frame rate
-        clk.tick(60)
-
-        GLOBALS.FPS = clk.get_fps()
         clk.tick(60)
 
         GLOBALS.FPS = clk.get_fps()
