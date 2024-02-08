@@ -1,5 +1,6 @@
-const joystickContainer = document.getElementById('joystick-container');
-const joystickHandle = document.getElementById('joystick-handle');
+const joystickWrapper = document.getElementById("joy-stick-wrapper");
+const joystickContainer = document.getElementById('joy-stick-container');
+const joystickHandle = document.getElementById('joy-stick-thumb');
 
 var joyx = 0, joyy = 0, joydx = 0, joydy = 0, movementInterval;
 
@@ -15,29 +16,24 @@ document.addEventListener('touchend', handleJoystickRelease);
 document.addEventListener('mousemove', handleJoystickMove);
 document.addEventListener('touchmove', handleJoystickMove);
 
-// functions
 function sendMovement() {
     socket.emit("movement", { dx: joydx, dy: joydy }, (ack) => {
         //console.log(ack);
-
         if (ack.status == 200) {
-            joystickHandle.style.transform = `translate(calc(-50% + ${joyx}px), calc(-50% + ${joyy}px))`;
+            if (!joystickWrapper.classList.contains("good")) {
+                joystickWrapper.classList.add("good");
+            }
+            if (joystickWrapper.classList.contains("bad")) {
+                joystickWrapper.classList.remove("bad");
+            }
         }
-        else if (ack.status == 404 ) {
-            console.log("Movement Error!");
-        }
-    });
-}
-
-function sendTrigger(_n) {
-    socket.emit("movement", { n: _n }, (ack) => {
-        //console.log(ack);
-
-        if (ack.status == 200) {
-            //
-        }
-        else if (ack.status == 404 ) {
-            console.log("Trigger Error!");
+        else if (ack.status == 404) {
+            if (!joystickWrapper.classList.contains("bad")) {
+                joystickWrapper.classList.add("bad");
+            }
+            if (joystickWrapper.classList.contains("good")) {
+                joystickWrapper.classList.remove("good");
+            }
         }
     });
 }
@@ -53,6 +49,12 @@ function handleJoystickRelease() {
     clearInterval(movementInterval);
     joystickHandle.style.transform = `translate(calc(-50%), calc(-50%))`;
     joyx = joyy = joydx = joydy = 0;
+    if (joystickWrapper.classList.contains("bad")) {
+        joystickWrapper.classList.remove("bad");
+    }
+    if (joystickWrapper.classList.contains("good")) {
+        joystickWrapper.classList.remove("good");
+    }
 }
 
 function handleJoystickMove(event) {
@@ -62,7 +64,7 @@ function handleJoystickMove(event) {
         try {
             touch = event.touches[0];
         } catch (error) {
-            console.log(error)
+            //console.log(error)
         }
 
         let containerHL = containerRect.width / 2
@@ -84,16 +86,6 @@ function handleJoystickMove(event) {
             joyy = joydy * containerHL;
         }
 
-        //console.log("moved", joyx, joyy, distance)
-
-        /* socket.emit("movement", { dx: dx, dy: 0 }, (ack) => {
-            console.log(ack);
-
-            if (ack.status == 200) {
-                joystickHandle.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-            }
-        }); */
-
-
+        joystickHandle.style.transform = `translate(calc(-50% + ${joyx}px), calc(-50% + ${joyy}px))`;
     }
 }

@@ -1,0 +1,88 @@
+main {
+    background-color: var(--color1);
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: 30% auto 30%;
+    grid-template-rows: 100%;
+    padding: 50px;
+    box-sizing: border-box;
+    touch-action: manipulation;
+}
+
+.joy-stick-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.joy-stick-container {
+    height: 45vh;
+    width: 45vh;
+    border-radius: 50%;
+    border: 20px solid var(--color3);
+    background-color: var(--color1);
+    position: relative;
+}
+
+.joy-stick-thumb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    height: 60%;
+    width: 60%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--color2);
+    border: 20px solid var(--color3);
+}
+
+.joy-stick-wrapper.good div {
+    border-color: var(--goood);
+}
+
+.joy-stick-wrapper.good .joy-stick-thumb {
+    background-color: var(--good);
+}
+
+.joy-stick-wrapper.bad div {
+    border-color: var(--baad);
+}
+
+.joy-stick-wrapper.bad .joy-stick-thumb {
+    background-color: var(--bad);
+}
+
+.joy-buttons-wrapper {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: 100%;
+}
+
+.button-container {
+    position: relative;
+}
+
+.button-container button {
+    position: absolute;
+    background-color: var(--color2);
+    border: 5px solid var(--color3);
+    border-radius: 50%;
+    width: 60px;
+    aspect-ratio: 1/1;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#button-1 {
+    top: 90%;
+}
+
+#button-2 {
+    top: 70%;
+}
+
+#button-3 {
+    top: 50%;
+}

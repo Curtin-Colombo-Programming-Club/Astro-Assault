@@ -1,6 +1,7 @@
 import sys
 from time import sleep
 
+import pygame.display
 from flask import Flask
 from flask_socketio import SocketIO
 from server import GLOBALS
@@ -13,10 +14,13 @@ app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 pygame.init()
 
-Players = Players()
+# globals
+GLOBALS.PLAYERS = Players()
+GLOBALS.LASERS = Lasers()
+GLOBALS.MISSILES = Missiles()
 
-SocketController(socketio, Players).control()
-HTTPController(app, Players).control()
+SocketController(socketio).control()
+HTTPController(app).control()
 
 # GLOBALS
 GLOBALS.GAMERUNNING = False
@@ -37,11 +41,14 @@ def Game():
 
     GLOBALS.WIDTH = screen.get_width()
     GLOBALS.HEIGHT = screen.get_height()
+    GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
+    GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
     print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
 
     print(Players)
 
     # Main game loop
+    clk = pygame.time.Clock()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -54,14 +61,22 @@ def Game():
         screen.fill(black)
 
         # Draw game elements here
-        Players.draw(screen)
-        Players.update()
+        GLOBALS.LASERS.draw(screen)
+        GLOBALS.LASERS.update()
+
+        GLOBALS.MISSILES.draw(screen)
+        GLOBALS.MISSILES.update()
+
+        GLOBALS.PLAYERS.draw(screen)
+        GLOBALS.PLAYERS.update()
 
         # Update the display
-        pygame.display.flip()
+        pygame.display.update()
 
         # Control the frame rate
-        pygame.time.Clock().tick(60)
+        clk.tick(60)
+
+        GLOBALS.FPS = clk.get_fps()
 
 
 GameThread = threading.Thread(target=Game)
