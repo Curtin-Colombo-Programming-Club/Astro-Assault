@@ -3,12 +3,13 @@ import uuid
 from flask_socketio import SocketIO, join_room, emit
 from flask import Flask, render_template, request, make_response
 from server.GameUtils import *
+from server import GLOBALS
 
 
 class SocketController:
-    def __init__(self, socketio: SocketIO, players: Players):
+    def __init__(self, socketio: SocketIO):
         self.__io = socketio
-        self.__players = players
+        self.__players = GLOBALS.PLAYERS
         self.__sessions = {}
 
     def control(self):
@@ -54,7 +55,28 @@ class SocketController:
 
             if _player:
                 _ship = _player.ship
-                _ship.sockUpdate(_dx, _dy)
+                _ship.sockMoveUpdate(_dx, _dy)
+                returnData["status"] = 200
+                returnData["message"] = "success!"
+            else:
+                returnData["status"] = 404
+                returnData["message"] = "player not found!"
+
+            return returnData
+
+        @self.__io.on("trigger")
+        def trigger_handler(data):
+            returnData = {"status": -1, "message": ""}
+
+            _n = data["n"]
+            print("trigger", _n)
+            _token = request.cookies.get('auth_token')
+
+            _player = self.__players[_token]
+
+            if _player:
+                _ship = _player.ship
+                _ship.sockTriggerUpdate(_n)
                 returnData["status"] = 200
                 returnData["message"] = "success!"
             else:
@@ -74,11 +96,11 @@ class SocketController:
 
 
 class HTTPController:
-    def __init__(self, app: Flask, players: Players):
+    def __init__(self, app: Flask):
         self.__app = app
         self.__app.template_folder = "client/templates"
         self.__app.static_folder = "client/static"
-        self.__players = players
+        self.__players = GLOBALS.PLAYERS
 
     def control(self):
         @self.__app.route("/controller", methods=["GET"])
@@ -87,9 +109,14 @@ class HTTPController:
             return render_template("controller.html")
 
         @self.__app.route("/controller2", methods=["GET"])
-        def controller():
+        def controller2():
             print(request.cookies.get('auth_token'))
             return render_template("controller2.html")
+
+        @self.__app.route("/controller3", methods=["GET"])
+        def controller3():
+            print(request.cookies.get('auth_token'))
+            return render_template("controller3.html")
 
         @self.__app.route("/test", methods=["GET"])
         def test():
