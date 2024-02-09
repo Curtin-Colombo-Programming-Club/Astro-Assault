@@ -92,12 +92,6 @@ def Game():
             for sprite2 in sprite2_list:
                 sprite2.dealDamage(1)
                 #pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
-                #pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)
-
-        for sprite1, sprite2_list in collisions3.items():
-            for sprite2 in sprite2_list:
-                sprite2.dealDamage(2)
-                #pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
                 #pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)"""
 
         GLOBALS.FPS = clk.get_fps()
