@@ -1,8 +1,15 @@
 const main = document.getElementById("main");
 
+const kills = document.getElementById("rectangle-button-1");
+const deaths = document.getElementById("rectangle-button-2");
+
 const joystickWrapper = document.getElementById("joy-stick-wrapper");
 const joystickContainer = document.getElementById('joy-stick-container');
 const joystickHandle = document.getElementById('joy-stick-thumb');
+
+const settings_btn = document.getElementById("middle-button-1");
+const respawn_btn = document.getElementById("middle-button-2");
+const fullscreen_btn = document.getElementById("middle-button-3");
 
 const button1 = document.getElementById("button-1");
 const button2 = document.getElementById("button-2");
@@ -11,6 +18,18 @@ const button3 = document.getElementById("button-3");
 var joyx = 0, joyy = 0, joydx = 0, joydy = 0, movementInterval;
 var isJoystickPressed = false, joystickTouch = null;
 
+// SOCK listners
+socket.on('kills', (data) => {
+    console.log(data)
+    kills.innerText = data.kills
+});
+
+socket.on('deaths', (data) => {
+    console.log(data)
+    deaths.innerText = data.deaths
+});
+
+// DOM listners
 joystickHandle.addEventListener('mousedown', handleJoystickPress);
 main.addEventListener('touchstart', (event) => {
     event.preventDefault();
@@ -29,6 +48,12 @@ main.addEventListener('touchstart', (event) => {
         }
         else if (touch.target.id === "button-3") {
             sendTrigger(3);
+        }
+        else if (touch.target.id === "middle-button-2") {
+            respawn();
+        }
+        else if (touch.target.id === "middle-button-3") {
+            toggleFullScreen();
         }
     }
 });
@@ -99,6 +124,10 @@ function sendTrigger(_n) {
             console.log("Movement Error!");
         }
     });
+}
+
+function respawn() {
+    socket.emit("respawn", { auth_token: localStorage.token });
 }
 
 function handleJoystickPress(event) {

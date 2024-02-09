@@ -114,8 +114,7 @@ class SocketController:
             self.__sessions.pop(request.sid, None)
 
     def send(self, _event: str, _data, _to):
-
-        emit(_event, _data, to=_to)
+        self.__io.emit(_event, _data, to=_to)
 
 
 class HTTPController:

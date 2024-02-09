@@ -245,6 +245,10 @@ class Ship(_Sprite):
     def primary_3_counter(self):
         return self._primary_3_counter
 
+    @property
+    def dead(self):
+        return self._dead
+
     def update(self, *args, **kwargs):
         super().update()
 
@@ -264,9 +268,14 @@ class Ship(_Sprite):
         if self._health <= 0:
             self.kill()
             self._dead = True
+            self._player.died()
 
     def respawn(self):
-        self.add(GLOBALS.SHIPS)
+        if self._dead:
+            self._health = 100
+            self._dead = False
+            self._rect.center = (random.randint(0, GLOBALS.WIDTH), random.randint(0, GLOBALS.HEIGHT))
+            self.add(GLOBALS.SHIPS)
 
     def sockMoveUpdate(self, _dx, _dy):
         self._angle -= 100 * ((GLOBALS.W_RATIO + GLOBALS.H_RATIO) / 2) * (1 / GLOBALS.FPS) * _dx
@@ -357,18 +366,24 @@ class Player:
     def connect(self):
         self.__online = True
         self.__lastOnline = datetime.datetime.now()
-        self.__ship.add(GLOBALS.SHIPS)
+        if not self.ship.dead:
+            self.__ship.add(GLOBALS.SHIPS)
 
     def disconnect(self):
         self.__online = False
         self.__lastOnline = datetime.datetime.now()
         self.__ship.kill()
 
+    def sockSend(self, _event, _data):
+        GLOBALS.SOCK.send(_event=_event, _data=_data, _to=self.token)
+
     def killed(self):
         self.__kills += 1
+        self.sockSend(_event="kills", _data={"kills": self.__kills})
 
     def died(self):
         self.__deaths += 1
+        self.sockSend(_event="deaths", _data={"deaths": self.__deaths})
 
     def __str__(self):
         return (f"Player(\n"
@@ -403,7 +418,7 @@ class Players:
         return self.__players.get(_token, None)
 
 
-def check_collision(_TSprite, _TSprite2) -> bool:
+def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
     if _TSprite.ship != _TSprite2 and _TSprite.rect.colliderect(_TSprite2.rect):
         try:
             _tc = _TSprite.center
@@ -411,6 +426,9 @@ def check_collision(_TSprite, _TSprite2) -> bool:
             if _a:
                 _hm = LaserHit(_x=_tc[0], _y=_tc[1], _angle=_TSprite.angle)
                 GLOBALS.HIT_MARKS.add(_hm)
+                _TSprite2.dealDamage(1 if isinstance(_TSprite, Laser) else 2 if isinstance(_TSprite, Missile) else 0)
+                if _TSprite2.dead:
+                    _TSprite.ship.player.killed()
                 return True
         except IndexError:
             pass
