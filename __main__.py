@@ -112,9 +112,9 @@ def Game():
         clk.tick(100)
 
 
-GameThread = threading.Thread(target=Game)
+"""GameThread = threading.Thread(target=Game)
 GameThread.daemon = True
-GameThread.start()
+GameThread.start()"""
 
 sleep(2)
 
