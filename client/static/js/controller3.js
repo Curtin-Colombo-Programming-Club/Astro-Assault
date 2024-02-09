@@ -21,12 +21,12 @@ var isJoystickPressed = false, joystickTouch = null;
 // SOCK listners
 socket.on('kills', (data) => {
     console.log(data)
-    kills.innerText = data.kills
+    kills.children[0].innerText = data.kills
 });
 
 socket.on('deaths', (data) => {
     console.log(data)
-    deaths.innerText = data.deaths
+    deaths.children[0].innerText = data.deaths
 });
 
 // DOM listners
