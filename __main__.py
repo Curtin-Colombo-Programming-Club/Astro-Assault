@@ -73,8 +73,8 @@ def Game():
         GLOBALS.MISSILES.draw(screen)
         GLOBALS.MISSILES.update()
 
+        GLOBALS.SHIPS.update(_screen=screen)
         GLOBALS.SHIPS.draw(screen)
-        GLOBALS.SHIPS.update()
 
         GLOBALS.HIT_MARKS.draw(screen)
         GLOBALS.HIT_MARKS.update()

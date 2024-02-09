@@ -205,16 +205,19 @@ class HitMarks(pygame.sprite.Group):
 
 
 class Flame(_Sprite):
-    def __init__(self, _x, _y, _angle, _side):
-        super().__init__(_x, _y)
+    def __init__(self, _ship, _side):
+        super().__init__(_ship.x, _ship.y)
 
         self._im = pygame.transform.scale(
-            _im := pygame.image.load(f"server/images/flame_{_side}.svg").convert_alpha(),
-            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            _im := pygame.image.load(f"server/images/{_side}_flame.png").convert_alpha(),
+            (_im.get_width() * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
-        self._angle = _angle
+        self._side = _side
+        self._angle = _ship.angle
         self._stretch = 0
+
+        self.__pos(_ship=_ship)
 
     @property
     def image(self):
@@ -227,13 +230,25 @@ class Flame(_Sprite):
         )
         return self._imc
 
+    def __pos(self, _ship):
+        _x_off = -55 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if self._side == "left" else 1)
+        _y_off = -83 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
+        _offset_theta = math.atan2(-_y_off, _x_off)
+        _r = math.sqrt(_x_off ** 2 + _y_off ** 2)
+        _ship_angle = -_ship.angle
+
+        # print("new l", _ship_angle,  _offset_theta)
+
+        self._rect.center = (_ship.x + (_r * math.cos(math.radians(_ship_angle) + _offset_theta)) - math.sin(math.radians(_ship_angle)) * self._im.get_height() * GLOBALS.W_RATIO * GLOBALS.C_RATIO * self._stretch / 2,
+                             _ship.y + (_r * math.sin(math.radians(_ship_angle) + _offset_theta)) + math.cos(math.radians(_ship_angle)) * self._im.get_height() * GLOBALS.W_RATIO * GLOBALS.C_RATIO * self._stretch / 2)
+
     def update(self, *args, **kwargs):
-        _speed = kwargs["_speed"]
-        _max_speed = kwargs["_max_speed"]
-        _x = kwargs["_x"]
-        _y = kwargs["_y"]
-        self._angle = kwargs["_angle"]
-        self._stretch = 2 * _speed / _max_speed
+        _ship = kwargs["_ship"]
+        self._angle = _ship.angle
+        _speed = abs(_ship.speed) if _ship.speed <= 0 else 0
+        self._stretch = 5 * _speed / GLOBALS.MAX_SPEED
+
+        self.__pos(_ship)
 
 
 class Ship(_Sprite):
@@ -247,8 +262,9 @@ class Ship(_Sprite):
         self._imc = self._im
 
         self._flames = pygame.sprite.Group()
-        self._flames.add(Flame(_x=self.x, _y=self.y, _angle=self._angle, _side="right"))
-        self._flames.add(Flame(_x=self.x, _y=self.y, _angle=self._angle, _side="left"))
+
+        self._flames.add(Flame(_ship=self, _side="right"))
+        self._flames.add(Flame(_ship=self, _side="left"))
 
         self._primary_chamber = "right"
         self._primary_3_counter = 0
@@ -287,6 +303,8 @@ class Ship(_Sprite):
     def update(self, *args, **kwargs):
         super().update()
         _screen = kwargs["_screen"]
+        self._flames.update(_ship=self)
+        self._flames.draw(_screen)
         # timers
         if self._secondary_timing:
             self._secondary_timer += 1/GLOBALS.FPS
@@ -320,7 +338,7 @@ class Ship(_Sprite):
             self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
 
         # speed constrains
-        _maxSpeed = 12 * GLOBALS.W_RATIO
+        _maxSpeed = GLOBALS.MAX_SPEED * GLOBALS.W_RATIO
         _drag = 1 * GLOBALS.W_RATIO
         # drag
         if abs(self._speed) >= _drag:

@@ -10,6 +10,7 @@ HEIGHT = 1000
 H_RATIO = 1
 W_RATIO = 1
 C_RATIO = 2 / 3
+MAX_SPEED = 12
 PLAYERS: Players | None = None
 SHIPS: Ships | None = None
 LASERS: Lasers | None = None
