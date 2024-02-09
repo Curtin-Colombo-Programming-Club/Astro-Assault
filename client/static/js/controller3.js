@@ -67,7 +67,7 @@ button2.addEventListener("click", () => { sendTrigger(2) });
 button3.addEventListener("click", () => { sendTrigger(3) }); */
 
 function sendMovement() {
-    socket.emit("movement", { dx: joydx, dy: joydy }, (ack) => {
+    socket.emit("movement", { dx: joydx, dy: joydy, auth_token: localStorage.token }, (ack) => {
         //console.log(ack);
         if (ack.status == 200) {
             if (!joystickWrapper.classList.contains("good")) {
@@ -89,7 +89,7 @@ function sendMovement() {
 }
 
 function sendTrigger(_n) {
-    socket.emit("trigger", { n: _n }, (ack) => {
+    socket.emit("trigger", { n: _n, auth_token: localStorage.token }, (ack) => {
         //console.log(ack);
 
         if (ack.status == 200) {

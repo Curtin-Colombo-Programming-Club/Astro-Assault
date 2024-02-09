@@ -11,13 +11,7 @@ class _Sprite(pygame.sprite.Sprite):
         self._im = pygame.surface.Surface((100, 100))
         self._imc = self._im
         self._rect = self._im.get_rect()
-        super().__init__()
-        self._im = pygame.surface.Surface((100, 100))
-        self._imc = self._im
-        self._rect = self._im.get_rect()
         self.rect.center = (_x, _y)
-        self._angle = 0
-        self._speed = 0
         self._angle = 0
         self._speed = 0
 
@@ -69,7 +63,7 @@ class Laser(_Sprite):
         self._ship = _ship
         self._im = pygame.transform.scale(
             _im := pygame.image.load(f"server/images/laser{_index}.svg"),
-            (_im.get_width() * 2 / 3 * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
         self._angle = _angle
@@ -94,7 +88,7 @@ class Missile(_Sprite):
         self._ship = _ship
         self._im = pygame.transform.scale(
             _im := pygame.image.load(f"server/images/missile.svg"),
-            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            (_im.get_width() * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
         self._angle = _angle
@@ -176,6 +170,40 @@ class Missiles(pygame.sprite.Group):
         return _missile
 
 
+class LaserHit(_Sprite):
+    def __init__(self, _x, _y, _angle):
+        super().__init__(_x, _y)
+        self._im = pygame.transform.scale(
+            _im := pygame.image.load(f"server/images/laser_hit.svg").convert_alpha(),
+            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+        )
+        self._imc = self._im
+        self._angle = _angle
+        self._timer = 0
+        self._speed = -1
+
+    def update(self, *args, **kwargs):
+        super().update()
+        self._timer += 1 / GLOBALS.FPS
+        self._im.set_alpha(int(255 - 255 * self._timer))
+        if self._timer >= 1:
+            self.kill()
+
+
+class MissileHit(_Sprite):
+    ...
+
+
+class HitMarks(pygame.sprite.Group):
+    def __init__(self, *_hit_marks):
+        super().__init__(_hit_marks)
+
+    def add(self, *_hit_marks):
+        for _hit_mark in _hit_marks:
+            if isinstance(_hit_mark, (LaserHit, MissileHit)):
+                super().add(_hit_mark)
+
+
 class Ship(_Sprite):
     def __init__(self, _x, _y, _player):
         super().__init__(_x, _y)
@@ -185,12 +213,21 @@ class Ship(_Sprite):
             (200 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, 200 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
 
-        print(self._im.get_height())
         self._imc = self._im
+
         self._primary_chamber = "right"
-        self._secondary_chamber = "right"
         self._primary_3_counter = 0
+
+        self._secondary_chamber = "right"
+        self._secondary_timer = 0
+        self._secondary_timing = False
+
         self._health = 100
+        self._dead = False
+
+    @property
+    def player(self):
+        return self._player
 
     @property
     def speed(self):
@@ -208,14 +245,31 @@ class Ship(_Sprite):
     def primary_3_counter(self):
         return self._primary_3_counter
 
+    def update(self, *args, **kwargs):
+        super().update()
+
+        # timers
+        if self._secondary_timing:
+            self._secondary_timer += 1/GLOBALS.FPS
+            if self._secondary_timer >= 5:
+                self._secondary_timer = 0
+                self._secondary_timing = False
+
     def dealDamage(self, _type: int):
         if _type == 1:
             self._health -= 1
         elif _type == 2:
             self._health -= 10
 
+        if self._health <= 0:
+            self.kill()
+            self._dead = True
+
+    def respawn(self):
+        self.add(GLOBALS.SHIPS)
+
     def sockMoveUpdate(self, _dx, _dy):
-        self._angle -= 60 * ((GLOBALS.W_RATIO + GLOBALS.H_RATIO) / 2) * (1 / GLOBALS.FPS) * _dx
+        self._angle -= 100 * ((GLOBALS.W_RATIO + GLOBALS.H_RATIO) / 2) * (1 / GLOBALS.FPS) * _dx
         self._speed += 3 * GLOBALS.W_RATIO * (1 / GLOBALS.FPS) * _dy
 
         if abs(self._angle) > 180:
@@ -241,8 +295,11 @@ class Ship(_Sprite):
                 self._primary_3_counter = 0
                 self._primary_chamber = "left" if self.primary_chamber == "right" else "right"
         elif _n == 3:
-            GLOBALS.MISSILES.newMissile(_ship=self)
-            self._secondary_chamber = "left" if self._secondary_chamber == "right" else "right"
+            if self._secondary_timer == 0:
+                GLOBALS.MISSILES.newMissile(_ship=self)
+                self._secondary_chamber = "left" if self._secondary_chamber == "right" else "right"
+                if self._secondary_chamber == "right":
+                    self._secondary_timing = True
 
     def __str__(self):
         return (f"Ship(\n"
@@ -251,13 +308,35 @@ class Ship(_Sprite):
                 f")")
 
 
+class Ships(pygame.sprite.Group):
+    def __init__(self, *_ships):
+        super().__init__(_ships)
+
+    @property
+    def ships(self) :
+        return self.sprites()
+
+    def add(self, *_ships):
+        for _ship in _ships:
+            if isinstance(_ships, Ship):
+                super().add(_ship)
+
+    def newShip(self, _player) -> Ship:
+        _ship = Ship(_player=_player, _x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT))
+        self.add(_player)
+
+        return _ship
+
+
 class Player:
     def __init__(self, _token: str):
         self.__online = False
         self.__lastOnline = datetime.datetime.now()
         self.__token = _token
-        self.__ship = Ship(_x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT), _player=self)
-        self.__ship = Ship(_x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT), _player=self)
+
+        self.__ship: Ship = GLOBALS.SHIPS.newShip(_player=self)
+        self.__kills = 0
+        self.__deaths = 0
 
     @property
     def online(self):
@@ -278,10 +357,18 @@ class Player:
     def connect(self):
         self.__online = True
         self.__lastOnline = datetime.datetime.now()
+        self.__ship.add(GLOBALS.SHIPS)
 
     def disconnect(self):
         self.__online = False
         self.__lastOnline = datetime.datetime.now()
+        self.__ship.kill()
+
+    def killed(self):
+        self.__kills += 1
+
+    def died(self):
+        self.__deaths += 1
 
     def __str__(self):
         return (f"Player(\n"
@@ -291,13 +378,10 @@ class Player:
                 ")")
 
 
-class Players(pygame.sprite.Group):
+class Players:
     def __init__(self, *_players):
         self.__players = {}
         self.add(_players)
-        _ships = [_player.ship for _player in _players]
-
-        super().__init__(_ships)
 
     @property
     def players(self) -> dict:
@@ -307,14 +391,11 @@ class Players(pygame.sprite.Group):
         for _player in _players:
             if isinstance(_player, Player):
                 self.players[_player.token] = _player
-                super().add(_player.ship)
+                #_player.ship.add(GLOBALS.SHIPS)
 
     def newPlayer(self, _token: str) -> Player:
         _player = Player(_token)
-        _player = Player(_token)
         self.add(_player)
-
-        print(_player.ship.center)
 
         return _player
 
@@ -328,6 +409,8 @@ def check_collision(_TSprite, _TSprite2) -> bool:
             _tc = _TSprite.center
             _a = _TSprite2.image.get_at((_TSprite.center[0] - _TSprite2.rect.left, _TSprite.center[1] - _TSprite2.rect.top))[3]
             if _a:
+                _hm = LaserHit(_x=_tc[0], _y=_tc[1], _angle=_TSprite.angle)
+                GLOBALS.HIT_MARKS.add(_hm)
                 return True
         except IndexError:
             pass

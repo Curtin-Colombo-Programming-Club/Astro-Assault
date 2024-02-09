@@ -12,8 +12,10 @@ import threading
 
 # GLOBALS
 GLOBALS.PLAYERS = Players()
+GLOBALS.SHIPS = Ships()
 GLOBALS.LASERS = Lasers()
 GLOBALS.MISSILES = Missiles()
+GLOBALS.HIT_MARKS = HitMarks()
 GLOBALS.GAMERUNNING = False
 
 # inits
@@ -33,7 +35,7 @@ def Game():
 
     GLOBALS.GAMERUNNING = True
     screen = pygame.display.set_mode((10000, 10000), pygame.FULLSCREEN)
-    pygame.display.set_caption("Basic Pygame Example")
+    pygame.display.set_caption("Astro Assault")
 
     # Set up colors
     white = (255, 255, 255)
@@ -43,14 +45,14 @@ def Game():
     GLOBALS.HEIGHT = screen.get_height()
     GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
     GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
-    GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
-    GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
     print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
 
     print(Players)
 
+    # Set up font
+    font = pygame.font.Font(None, 20)  # You can choose your own font and size
+
     # Main game loop
-    clk = pygame.time.Clock()
     clk = pygame.time.Clock()
     while True:
         for event in pygame.event.get():
@@ -70,44 +72,49 @@ def Game():
         GLOBALS.MISSILES.draw(screen)
         GLOBALS.MISSILES.update()
 
-        GLOBALS.PLAYERS.draw(screen)
-        GLOBALS.PLAYERS.update()
+        GLOBALS.SHIPS.draw(screen)
+        GLOBALS.SHIPS.update()
+
+        GLOBALS.HIT_MARKS.draw(screen)
+        GLOBALS.HIT_MARKS.update()
 
         # Check for collisions between the two groups
         collisions1 = pygame.sprite.groupcollide(GLOBALS.MISSILES, GLOBALS.LASERS, True, True)
-        collisions2 = pygame.sprite.groupcollide(GLOBALS.LASERS, GLOBALS.PLAYERS,
+        collisions2 = pygame.sprite.groupcollide(GLOBALS.LASERS, GLOBALS.SHIPS,
                                                  True, False,
                                                  check_collision)
-        collisions3 = pygame.sprite.groupcollide(GLOBALS.MISSILES, GLOBALS.PLAYERS,
+        collisions3 = pygame.sprite.groupcollide(GLOBALS.MISSILES, GLOBALS.SHIPS,
                                                  True, False,
                                                  check_collision)
 
         for sprite1, sprite2_list in collisions2.items():
             for sprite2 in sprite2_list:
                 sprite2.dealDamage(1)
-                print(sprite1, sprite2)
-                pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
-                pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)
+                #pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
+                #pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)
 
         for sprite1, sprite2_list in collisions3.items():
             for sprite2 in sprite2_list:
                 sprite2.dealDamage(2)
-                print(sprite1, sprite2)
-                pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
-                pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)
+                #pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
+                #pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)
+
+        GLOBALS.FPS = clk.get_fps()
+
+        # Render FPS text
+        fps_text = font.render("FPS: " + str(int(GLOBALS.FPS)), True, (0, 255, 10))
+        screen.blit(fps_text, (10, 10))  # Adjust position as needed
 
         # Update the display
         pygame.display.update()
 
         # Control the frame rate
-        clk.tick(60)
-
-        GLOBALS.FPS = clk.get_fps()
+        clk.tick(100)
 
 
-"""GameThread = threading.Thread(target=Game)
+GameThread = threading.Thread(target=Game)
 GameThread.daemon = True
-GameThread.start()"""
+GameThread.start()
 
 sleep(2)
 

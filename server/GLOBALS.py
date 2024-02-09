@@ -1,3 +1,5 @@
+from server.GameUtils import *
+
 # GLOBALS
 FPS = 0
 GAMERUNNING = False
@@ -6,6 +8,8 @@ HEIGHT = 1000
 H_RATIO = 1
 W_RATIO = 1
 C_RATIO = 2 / 3
-PLAYERS = None
-LASERS = None
-MISSILES = None
+PLAYERS: Players | None = None
+SHIPS: Ships | None = None
+LASERS: Lasers | None = None
+MISSILES: Missiles | None = None
+HIT_MARKS: HitMarks | None = None

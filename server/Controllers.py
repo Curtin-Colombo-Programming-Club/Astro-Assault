@@ -1,5 +1,7 @@
 import datetime
 import uuid
+from typing import Dict
+from server.GameUtils import *
 from flask_socketio import SocketIO, join_room, emit
 from flask import Flask, render_template, request, make_response
 from server.GameUtils import *
@@ -9,7 +11,7 @@ from server import GLOBALS
 class SocketController:
     def __init__(self, socketio: SocketIO):
         self.__io = socketio
-        self.__players = GLOBALS.PLAYERS
+        self.__players: Players = GLOBALS.PLAYERS
         self.__sessions = {}
 
     def control(self):
@@ -45,11 +47,11 @@ class SocketController:
 
         @self.__io.on("movement")
         def movement_handler(data):
-            returnData = {"status": -1, "message": ""}
+            returnData: dict[str, str | int] = {"status": -1, "message": ""}
 
             _dx = data["dx"]
             _dy = data["dy"]
-            _token = request.cookies.get('auth_token')
+            _token = data.get('auth_token', None)
 
             _player = self.__players[_token]
 
@@ -66,11 +68,11 @@ class SocketController:
 
         @self.__io.on("trigger")
         def trigger_handler(data):
-            returnData = {"status": -1, "message": ""}
+            returnData: dict[str, str | int] = {"status": -1, "message": ""}
 
             _n = data["n"]
-            print("trigger", _n)
-            _token = request.cookies.get('auth_token')
+            # print("trigger", _n)
+            _token = data.get('auth_token', None)
 
             _player = self.__players[_token]
 
@@ -85,6 +87,23 @@ class SocketController:
 
             return returnData
 
+        @self.__io.on("respawn")
+        def respawn(data):
+            returnData: dict[str, str | int] = {"status": -1, "message": ""}
+
+            _token = data.get('auth_token', None)
+
+            _player = self.__players[_token]
+
+            if _player:
+                _ship = _player.ship
+                _ship.respawn()
+                returnData["status"] = 200
+                returnData["message"] = "success!"
+            else:
+                returnData["status"] = 404
+                returnData["message"] = "player not found!"
+
         @self.__io.on("disconnect")
         def disconnect_handler():
             print(request.cookies.get('auth_token'), "disconnect!")
@@ -93,6 +112,10 @@ class SocketController:
             _player.disconnect()
 
             self.__sessions.pop(request.sid, None)
+
+    def send(self, _event: str, _data, _to):
+
+        emit(_event, _data, to=_to)
 
 
 class HTTPController:
