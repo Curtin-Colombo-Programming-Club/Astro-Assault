@@ -271,9 +271,11 @@ class Ship(_Sprite):
             self._player.died()
 
     def respawn(self):
-        self._health = 100
-        self._dead = False
-        self.add(GLOBALS.SHIPS)
+        if self._dead:
+            self._health = 100
+            self._dead = False
+            self._rect.center = (random.randint(0, GLOBALS.WIDTH), random.randint(0, GLOBALS.HEIGHT))
+            self.add(GLOBALS.SHIPS)
 
     def sockMoveUpdate(self, _dx, _dy):
         self._angle -= 100 * ((GLOBALS.W_RATIO + GLOBALS.H_RATIO) / 2) * (1 / GLOBALS.FPS) * _dx

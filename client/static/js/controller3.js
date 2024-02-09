@@ -7,6 +7,10 @@ const joystickWrapper = document.getElementById("joy-stick-wrapper");
 const joystickContainer = document.getElementById('joy-stick-container');
 const joystickHandle = document.getElementById('joy-stick-thumb');
 
+const settings_btn = document.getElementById("middle-button-1");
+const respawn_btn = document.getElementById("middle-button-2");
+const fullscreen_btn = document.getElementById("middle-button-3");
+
 const button1 = document.getElementById("button-1");
 const button2 = document.getElementById("button-2");
 const button3 = document.getElementById("button-3");
@@ -44,6 +48,12 @@ main.addEventListener('touchstart', (event) => {
         }
         else if (touch.target.id === "button-3") {
             sendTrigger(3);
+        }
+        else if (touch.target.id === "middle-button-2") {
+            respawn();
+        }
+        else if (touch.target.id === "middle-button-3") {
+            toggleFullScreen();
         }
     }
 });
@@ -114,6 +124,10 @@ function sendTrigger(_n) {
             console.log("Movement Error!");
         }
     });
+}
+
+function respawn() {
+    socket.emit("respawn", { auth_token: localStorage.token });
 }
 
 function handleJoystickPress(event) {
