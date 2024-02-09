@@ -1,6 +1,8 @@
 from server.GameUtils import *
+from server.Controllers import *
 
 # GLOBALS
+SOCK: SocketController | None = None
 FPS = 0
 GAMERUNNING = False
 WIDTH = 1000

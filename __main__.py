@@ -24,7 +24,8 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 pygame.init()
 
 # controls
-SocketController(socketio).control()
+GLOBALS.SOCK = SocketController(socketio)
+GLOBALS.SOCK.control()
 HTTPController(app).control()
 
 
@@ -87,7 +88,7 @@ def Game():
                                                  True, False,
                                                  check_collision)
 
-        for sprite1, sprite2_list in collisions2.items():
+        """for sprite1, sprite2_list in collisions2.items():
             for sprite2 in sprite2_list:
                 sprite2.dealDamage(1)
                 #pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
@@ -97,7 +98,7 @@ def Game():
             for sprite2 in sprite2_list:
                 sprite2.dealDamage(2)
                 #pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
-                #pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)
+                #pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)"""
 
         GLOBALS.FPS = clk.get_fps()
 
@@ -112,9 +113,9 @@ def Game():
         clk.tick(100)
 
 
-"""GameThread = threading.Thread(target=Game)
+GameThread = threading.Thread(target=Game)
 GameThread.daemon = True
-GameThread.start()"""
+GameThread.start()
 
 sleep(2)
 

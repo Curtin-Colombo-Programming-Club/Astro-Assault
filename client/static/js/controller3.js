@@ -1,5 +1,8 @@
 const main = document.getElementById("main");
 
+const kills = document.getElementById("rectangle-button-1");
+const deaths = document.getElementById("rectangle-button-2");
+
 const joystickWrapper = document.getElementById("joy-stick-wrapper");
 const joystickContainer = document.getElementById('joy-stick-container');
 const joystickHandle = document.getElementById('joy-stick-thumb');
@@ -11,6 +14,18 @@ const button3 = document.getElementById("button-3");
 var joyx = 0, joyy = 0, joydx = 0, joydy = 0, movementInterval;
 var isJoystickPressed = false, joystickTouch = null;
 
+// SOCK listners
+socket.on('kills', (data) => {
+    console.log(data)
+    kills.innerText = data.kills
+});
+
+socket.on('deaths', (data) => {
+    console.log(data)
+    deaths.innerText = data.deaths
+});
+
+// DOM listners
 joystickHandle.addEventListener('mousedown', handleJoystickPress);
 main.addEventListener('touchstart', (event) => {
     event.preventDefault();
