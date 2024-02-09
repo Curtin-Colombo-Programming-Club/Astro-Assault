@@ -204,6 +204,38 @@ class HitMarks(pygame.sprite.Group):
                 super().add(_hit_mark)
 
 
+class Flame(_Sprite):
+    def __init__(self, _x, _y, _angle, _side):
+        super().__init__(_x, _y)
+
+        self._im = pygame.transform.scale(
+            _im := pygame.image.load(f"server/images/flame_{_side}.svg").convert_alpha(),
+            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+        )
+        self._imc = self._im
+        self._angle = _angle
+        self._stretch = 0
+
+    @property
+    def image(self):
+        self._imc = pygame.transform.rotate(
+            pygame.transform.scale(
+                self._im,
+                (self._im.get_width(), self._im.get_height()*self._stretch)
+            ),
+            self.angle
+        )
+        return self._imc
+
+    def update(self, *args, **kwargs):
+        _speed = kwargs["_speed"]
+        _max_speed = kwargs["_max_speed"]
+        _x = kwargs["_x"]
+        _y = kwargs["_y"]
+        self._angle = kwargs["_angle"]
+        self._stretch = 2 * _speed / _max_speed
+
+
 class Ship(_Sprite):
     def __init__(self, _x, _y, _player):
         super().__init__(_x, _y)
@@ -212,8 +244,11 @@ class Ship(_Sprite):
             _im := pygame.image.load("server/images/ship.svg"),
             (200 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, 200 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
-
         self._imc = self._im
+
+        self._flames = pygame.sprite.Group()
+        self._flames.add(Flame(_x=self.x, _y=self.y, _angle=self._angle, _side="right"))
+        self._flames.add(Flame(_x=self.x, _y=self.y, _angle=self._angle, _side="left"))
 
         self._primary_chamber = "right"
         self._primary_3_counter = 0
@@ -251,7 +286,7 @@ class Ship(_Sprite):
 
     def update(self, *args, **kwargs):
         super().update()
-
+        _screen = kwargs["_screen"]
         # timers
         if self._secondary_timing:
             self._secondary_timer += 1/GLOBALS.FPS

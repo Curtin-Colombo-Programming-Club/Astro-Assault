@@ -3,9 +3,11 @@ import uuid
 from typing import Dict
 from server.GameUtils import *
 from flask_socketio import SocketIO, join_room, emit
-from flask import Flask, render_template, request, make_response
+from flask import Flask, render_template, request, make_response, url_for, send_file
 from server.GameUtils import *
 from server import GLOBALS
+import qrcode
+from io import BytesIO
 
 
 class SocketController:
@@ -144,3 +146,26 @@ class HTTPController:
         def test():
             print(request.cookies.get('auth_token'), "/test")
             return render_template("test2.html")
+
+        @self.__app.route("/<path>.qr", methods=["GET"])
+        def qr(path):
+            print(path)
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            url = request.url_root + path
+            print(url)
+            qr.add_data(url)
+            qr.make(fit=True)
+
+            qr_img_stream = BytesIO()
+
+            qr.make_image(fill_color="black", back_color="white").save(qr_img_stream)
+            qr_img_stream.seek(0)
+
+            return send_file(qr_img_stream, mimetype='image/png')
+
+
