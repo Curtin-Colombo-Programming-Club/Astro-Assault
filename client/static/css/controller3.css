@@ -162,6 +162,30 @@ main {
     width: 100%;
 }
 
+#middle-button-1{
+    top: 20%;
+    background-image: url(/static/images/settings.png);
+    background-position: center;
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+
+#middle-button-2{
+    top: 20%;
+    background-image: url(/static/images/refresh.png);
+    background-position: center;
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+
+#middle-button-3{
+    top: 20%;
+    background-image: url(/static/images/fullscreen.png);
+    background-position: center;
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+
 .middle-button {
     background-color: var(--color2);
     border: 5px solid var(--color3);
