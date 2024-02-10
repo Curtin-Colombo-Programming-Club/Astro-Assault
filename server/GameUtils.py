@@ -63,7 +63,7 @@ class Laser(_Sprite):
         self._ship = _ship
         self._im = pygame.transform.scale(
             _im := pygame.image.load(f"server/images/laser{_index}.svg"),
-            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            (_im.get_width() * 4 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
         self._angle = _angle
@@ -88,7 +88,7 @@ class Missile(_Sprite):
         self._ship = _ship
         self._im = pygame.transform.scale(
             _im := pygame.image.load(f"server/images/missile.svg"),
-            (_im.get_width() * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
         self._angle = _angle
@@ -487,19 +487,3 @@ def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
             pass
     else:
         return False
-
-
-def laser_ship_collision(lSprite: Laser, sSprite: Ship) -> bool:
-    if lSprite.ship != sSprite:
-        sSprite.dealDamage(1)
-        lSprite.kill()
-        print("contact ship:", sSprite, "\nowner ship:", lSprite.ship)
-    return True
-
-
-def missile_ship_collision(mSprite: Missile, sSprite: Ship) -> bool:
-    if mSprite.ship != sSprite:
-        sSprite.dealDamage(2)
-        #mSprite.kill()
-    #print("contact ship:", sSprite, "\nowner ship:", mSprite.ship)
-    return True

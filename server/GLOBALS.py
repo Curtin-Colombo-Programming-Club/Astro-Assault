@@ -5,8 +5,9 @@ from server.Controllers import *
 SOCK: SocketController | None = None
 FPS = 0
 GAMERUNNING = False
-WIDTH = 1000
-HEIGHT = 1000
+WIDTH = 1280
+HEIGHT = 720
+FULLSCREEN = False
 H_RATIO = 1
 W_RATIO = 1
 C_RATIO = 2 / 3

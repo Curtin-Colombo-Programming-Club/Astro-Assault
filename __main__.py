@@ -24,7 +24,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 pygame.init()
 
 # controls
-GLOBALS.SOCK = SocketController(socketio)
+GLOBALS.SOCK = SocketController(socketio)+
 GLOBALS.SOCK.control()
 HTTPController(app).control()
 
@@ -35,7 +35,7 @@ def Game():
         return -1
 
     GLOBALS.GAMERUNNING = True
-    screen = pygame.display.set_mode((10000, 10000), pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((GLOBALS.WIDTH, GLOBALS.HEIGHT))
     pygame.display.set_caption("Astro Assault")
 
     # Set up colors
@@ -60,6 +60,20 @@ def Game():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                # Check if Alt and Enter are pressed simultaneously
+                if event.key == pygame.K_RETURN and pygame.key.get_mods() & pygame.KMOD_ALT:
+                    GLOBALS.FULLSCREEN = not GLOBALS.FULLSCREEN
+                    if GLOBALS.FULLSCREEN:
+                        screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
+                        GLOBALS.WIDTH = screen.get_width()
+                        GLOBALS.HEIGHT = screen.get_height()
+                        print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
+                    else:
+                        screen = pygame.display.set_mode((GLOBALS.WIDTH, GLOBALS.HEIGHT))
+                        GLOBALS.WIDTH = screen.get_width()
+                        GLOBALS.HEIGHT = screen.get_height()
+                        print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
 
         # Update game logic here
 
@@ -87,12 +101,6 @@ def Game():
         collisions3 = pygame.sprite.groupcollide(GLOBALS.MISSILES, GLOBALS.SHIPS,
                                                  True, False,
                                                  check_collision)
-
-        """for sprite1, sprite2_list in collisions2.items():
-            for sprite2 in sprite2_list:
-                sprite2.dealDamage(1)
-                #pygame.draw.rect(screen, (255, 0, 0), sprite1.rect, 2)
-                #pygame.draw.rect(screen, (255, 0, 0), sprite2.rect, 2)"""
 
         GLOBALS.FPS = clk.get_fps()
 
