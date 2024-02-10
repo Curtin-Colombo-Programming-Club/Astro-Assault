@@ -24,7 +24,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 pygame.init()
 
 # controls
-GLOBALS.SOCK = SocketController(socketio)+
+GLOBALS.SOCK = SocketController(socketio)
 GLOBALS.SOCK.control()
 HTTPController(app).control()
 
