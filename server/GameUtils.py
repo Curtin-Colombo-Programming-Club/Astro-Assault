@@ -312,7 +312,7 @@ class Ship(_Sprite):
         )
         self._imc = self._im
 
-        self._mass = 10
+        self._mass = 1000
 
         self._flames = pygame.sprite.Group()
 
@@ -380,7 +380,7 @@ class Ship(_Sprite):
             self.add(GLOBALS.SHIPS)
 
     def sockMoveUpdate(self, _dx, _dy):
-        self._angle -= 100 * (1 / GLOBALS.FPS) * _dx
+        self._angle -= ((1e-1 * _dx) * GLOBALS.ELAPSED_TIME) / 1000
         if abs(self._angle) > 180:
             self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
 
@@ -396,22 +396,21 @@ class Ship(_Sprite):
         _force_factor = _dy if _dy <= 0 else _dy / 2
         self._force = _unit_force * _force_factor
         _acceleration = self._force / self.mass
-        _time = 1 / GLOBALS.FPS
+        _time = (1 * GLOBALS.ELAPSED_TIME) * 1000
         _add_speed = _acceleration * _time * GLOBALS.W_RATIO
 
         self._velocity[0] += _add_speed * math.sin(math.radians(self.angle))
         self._velocity[1] += _add_speed * math.cos(math.radians(self.angle))
 
-        print(self._force)
-
         # speed constrains
-        _maxSpeed = GLOBALS.MAX_SPEED * GLOBALS.W_RATIO
+        _maxSpeed = GLOBALS.MAX_SPEED
+        print(self.velocity)
 
         # max speed
-        plus_minus = _force_factor / _abs if (_abs := abs(_force_factor)) > 0 else 1
         if abs(self.speed) > _maxSpeed:
-            self._velocity[0] = plus_minus * _maxSpeed * math.sin(math.radians(self.angle))
-            self._velocity[1] = plus_minus * _maxSpeed * math.cos(math.radians(self.angle))
+            _angle = math.degrees(math.atan2(-self._velocity[0], -self._velocity[1]))
+            self._velocity[0] = - _maxSpeed * math.sin(math.radians(_angle))
+            self._velocity[1] = - _maxSpeed * math.cos(math.radians(_angle))
 
     def sockTriggerUpdate(self, _n):
         if _n == 2:

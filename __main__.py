@@ -1,4 +1,5 @@
 import sys
+import time
 from time import sleep
 
 import pygame.display
@@ -56,7 +57,9 @@ def Game():
 
     # Main game loop
     clk = pygame.time.Clock()
+    last_frame_time = pygame.time.get_ticks()
     while True:
+        st = time.time()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -76,6 +79,11 @@ def Game():
                         GLOBALS.HEIGHT = screen.get_height()
                         print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
 
+
+        current_time = pygame.time.get_ticks()
+        elapsed_time = current_time - last_frame_time
+        GLOBALS.ELAPSED_TIME = elapsed_time
+        #print("fps", 1000/elapsed_time, pygame.time.get_ticks())
         # Update game logic here
 
         # Clear the screen
@@ -109,7 +117,8 @@ def Game():
         pygame.display.update()
 
         # Control the frame rate
-        clk.tick(100)
+        clk.tick(120)
+        #print("fps", 1/(time.time()-st))
 
 
 GameThread = threading.Thread(target=Game)
