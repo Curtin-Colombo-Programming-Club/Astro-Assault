@@ -9,6 +9,7 @@ from server import GLOBALS
 from server.GameUtils import *
 from server.Controllers import *
 import threading
+import pygame.surface
 
 # GLOBALS
 GLOBALS.PLAYERS = Players()
@@ -48,7 +49,7 @@ def Game():
     GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
     print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
 
-    print(Players)
+    print("screen", hasattr(screen, "blits"))
 
     # Set up font
     font = pygame.font.Font(None, 20)  # You can choose your own font and size
@@ -81,17 +82,17 @@ def Game():
         screen.fill(black)
 
         # Draw game elements here
-        GLOBALS.LASERS.draw(screen)
-        GLOBALS.LASERS.update()
+        #GLOBALS.LASERS.draw(screen)
+        GLOBALS.LASERS.updatex(_screen=screen)
 
-        GLOBALS.MISSILES.draw(screen)
-        GLOBALS.MISSILES.update()
+        #GLOBALS.MISSILES.draw(screen)
+        GLOBALS.MISSILES.updatex(_screen=screen)
 
-        GLOBALS.SHIPS.update(_screen=screen)
-        GLOBALS.SHIPS.draw(screen)
+        GLOBALS.SHIPS.updatex(_screen=screen)
+        #GLOBALS.SHIPS.draw(screen)
 
-        GLOBALS.HIT_MARKS.draw(screen)
-        GLOBALS.HIT_MARKS.update()
+        #GLOBALS.HIT_MARKS.draw(screen)
+        GLOBALS.HIT_MARKS.updatex(_screen=screen)
 
         # Check for collisions between the two groups
         collisions1 = pygame.sprite.groupcollide(GLOBALS.MISSILES, GLOBALS.LASERS, True, True)

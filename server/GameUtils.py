@@ -12,7 +12,10 @@ class _Sprite(pygame.sprite.Sprite):
         self._imc = self._im
         self._rect = self._im.get_rect()
         self.rect.center = (_x, _y)
+        self._force = 0
         self._angle = 0
+        self._mass = 0
+        self._velocity = [0, 0]
         self._speed = 0
 
     @property
@@ -38,12 +41,28 @@ class _Sprite(pygame.sprite.Sprite):
         return self.rect.centery
 
     @property
+    def force(self):
+        return self._force
+
+    @property
     def angle(self):
         return self._angle
 
+    @property
+    def mass(self):
+        return self._mass
+
+    @property
+    def speed(self):
+        return math.sqrt(self._velocity[0]**2 + self._velocity[1]**2)
+
+    @property
+    def velocity(self):
+        return tuple(self._velocity)
+
     def update(self, *args, **kwargs):
-        _x = self.x + self._speed * math.sin(math.radians(self.angle))
-        _y = self.y + self._speed * math.cos(math.radians(self.angle))
+        _x = self.x + self.velocity[0]
+        _y = self.y + self.velocity[1]
 
         if _x < 0:
             _x = GLOBALS.WIDTH
@@ -57,6 +76,36 @@ class _Sprite(pygame.sprite.Sprite):
         self._rect.center = (_x, _y)
 
 
+class _Group(pygame.sprite.Group):
+    def __init__(self, *_sprites):
+        super().__init__(_sprites)
+
+    def updatex(self, *args, **kwargs):
+        _screen = kwargs["_screen"]
+        _special_flags = kwargs.get("special_flags", 0)
+        for sprite in self.sprites():
+            sprite.update(_screen=_screen)
+            _screen.blit(sprite.image, sprite.rect, None, _special_flags)
+            """if hasattr(_screen, "blits"):
+                self.spritedict.update(
+                    zip(
+                        sprites,
+                        _screen.blits(
+                            (spr.image, spr.rect, None, special_flags) for spr in sprites
+                        ),
+                    )
+                )
+            else:
+                for spr in sprites:
+                    self.spritedict[spr] = _screen.blit(
+                        spr.image, spr.rect, None, _special_flags
+                    )
+            self.lostsprites = []
+            dirty = self.lostsprites
+
+            return dirty"""
+
+
 class Laser(_Sprite):
     def __init__(self, _x, _y, _angle, _ship, _index=1):
         super().__init__(_x=_x, _y=_y)
@@ -67,7 +116,8 @@ class Laser(_Sprite):
         )
         self._imc = self._im
         self._angle = _angle
-        self._speed = -15 + _ship.speed
+        _speed = -15 + _ship.speed
+        self._velocity = [_speed * math.sin(math.radians(_angle)), _speed * math.cos(math.radians(_angle))]
         self._seconds = 0
 
     @property
@@ -92,7 +142,8 @@ class Missile(_Sprite):
         )
         self._imc = self._im
         self._angle = _angle
-        self._speed = -10 + _ship.speed
+        _speed = -10 + _ship.speed
+        self._velocity = [_speed * math.sin(math.radians(_angle)), _speed * math.cos(math.radians(_angle))]
         self._seconds = 0
 
     @property
@@ -107,7 +158,7 @@ class Missile(_Sprite):
             self.kill()
 
 
-class Lasers(pygame.sprite.Group):
+class Lasers(_Group):
     def __init__(self, *_lasers):
         super().__init__(_lasers)
 
@@ -139,7 +190,7 @@ class Lasers(pygame.sprite.Group):
         return _laser
 
 
-class Missiles(pygame.sprite.Group):
+class Missiles(_Group):
     def __init__(self, *_missiles):
         super().__init__(_missiles)
 
@@ -194,7 +245,7 @@ class MissileHit(_Sprite):
     ...
 
 
-class HitMarks(pygame.sprite.Group):
+class HitMarks(_Group):
     def __init__(self, *_hit_marks):
         super().__init__(_hit_marks)
 
@@ -245,8 +296,8 @@ class Flame(_Sprite):
     def update(self, *args, **kwargs):
         _ship = kwargs["_ship"]
         self._angle = _ship.angle
-        _speed = abs(_ship.speed) if _ship.speed <= 0 else 0
-        self._stretch = 5 * _speed / GLOBALS.MAX_SPEED
+        _force = abs(_ship.force) if _ship.force <= 0 else 0
+        self._stretch = 2 * _force / GLOBALS.UNIT_FORCE
 
         self.__pos(_ship)
 
@@ -260,6 +311,8 @@ class Ship(_Sprite):
             (200 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, 200 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
+
+        self._mass = 5
 
         self._flames = pygame.sprite.Group()
 
@@ -279,10 +332,6 @@ class Ship(_Sprite):
     @property
     def player(self):
         return self._player
-
-    @property
-    def speed(self):
-        return self._speed
 
     @property
     def primary_chamber(self):
@@ -331,23 +380,38 @@ class Ship(_Sprite):
             self.add(GLOBALS.SHIPS)
 
     def sockMoveUpdate(self, _dx, _dy):
-        self._angle -= 100 * ((GLOBALS.W_RATIO + GLOBALS.H_RATIO) / 2) * (1 / GLOBALS.FPS) * _dx
-        self._speed += 3 * GLOBALS.W_RATIO * (1 / GLOBALS.FPS) * _dy
-
+        self._angle -= 100 * (1 / GLOBALS.FPS) * _dx
         if abs(self._angle) > 180:
             self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
 
+        """
+        speed calculation
+        =================
+        v = u + a . t
+        F = m . a  →  a = F / m
+        
+        ∴ +speed = a . t
+        """
+        _unit_force = GLOBALS.UNIT_FORCE
+        _force_factor = _dy if _dy <= 0 else _dy / 2
+        self._force = _unit_force * _force_factor
+        _acceleration = self._force / self.mass
+        _time = 1 / GLOBALS.FPS
+        _add_speed = _acceleration * _time * GLOBALS.W_RATIO
+
+        self._velocity[0] += _add_speed * math.sin(math.radians(self.angle))
+        self._velocity[1] += _add_speed * math.cos(math.radians(self.angle))
+
+        print(self.speed)
+
         # speed constrains
         _maxSpeed = GLOBALS.MAX_SPEED * GLOBALS.W_RATIO
-        _drag = 1 * GLOBALS.W_RATIO
-        # drag
-        if abs(self._speed) >= _drag:
-            self._speed -= _drag * (1 / GLOBALS.FPS) * self._speed / abs(self._speed)
-        elif abs(self._speed) >= _drag / 2:
-            self._speed -= (_drag / 2) * (1 / GLOBALS.FPS) * self._speed / abs(self._speed)
+
         # max speed
-        if abs(self._speed) > _maxSpeed:
-            self._speed = _maxSpeed * self._speed / abs(self._speed)
+        plus_minus = _force_factor / _abs if (_abs := abs(_force_factor)) > 0 else 1
+        if abs(self.speed) > _maxSpeed:
+            self._velocity[0] = plus_minus * _maxSpeed * math.sin(math.radians(self.angle))
+            self._velocity[1] = plus_minus * _maxSpeed * math.cos(math.radians(self.angle))
 
     def sockTriggerUpdate(self, _n):
         if _n == 2:
@@ -370,7 +434,7 @@ class Ship(_Sprite):
                 f")")
 
 
-class Ships(pygame.sprite.Group):
+class Ships(_Group):
     def __init__(self, *_ships):
         super().__init__(_ships)
 

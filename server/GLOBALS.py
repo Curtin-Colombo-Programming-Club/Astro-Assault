@@ -11,6 +11,7 @@ FULLSCREEN = False
 H_RATIO = 1
 W_RATIO = 1
 C_RATIO = 2 / 3
+UNIT_FORCE = 20
 MAX_SPEED = 12
 PLAYERS: Players | None = None
 SHIPS: Ships | None = None

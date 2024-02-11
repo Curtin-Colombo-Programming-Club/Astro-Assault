@@ -73,6 +73,7 @@ document.addEventListener('touchend', (event) => {
     if (!_js) {
         isJoystickPressed = false;
         clearInterval(movementInterval);
+        socket.emit("movement", { dx: 0, dy: 0, auth_token: localStorage.token })
         joystickHandle.style.transform = `translate(calc(-50%), calc(-50%))`;
         joyx = joyy = joydx = joydy = 0;
         if (joystickWrapper.classList.contains("bad")) {
@@ -87,13 +88,9 @@ document.addEventListener('touchend', (event) => {
 document.addEventListener('mousemove', handleJoystickMove);
 document.addEventListener('touchmove', handleJoystickMove);
 
-/* button1.addEventListener("click", () => { sendTrigger(1) });
-button2.addEventListener("click", () => { sendTrigger(2) });
-button3.addEventListener("click", () => { sendTrigger(3) }); */
-
 function sendMovement() {
+    console.log(joydy);
     socket.emit("movement", { dx: joydx, dy: joydy, auth_token: localStorage.token }, (ack) => {
-        //console.log(ack);
         if (ack.status == 200) {
             if (!joystickWrapper.classList.contains("good")) {
                 joystickWrapper.classList.add("good");
@@ -115,8 +112,6 @@ function sendMovement() {
 
 function sendTrigger(_n) {
     socket.emit("trigger", { n: _n, auth_token: localStorage.token }, (ack) => {
-        //console.log(ack);
-
         if (ack.status == 200) {
             //
         }
