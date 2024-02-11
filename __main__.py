@@ -81,17 +81,13 @@ def Game():
         # Clear the screen
         screen.fill(black)
 
-        # Draw game elements here
-        #GLOBALS.LASERS.draw(screen)
+        # updatex
         GLOBALS.LASERS.updatex(_screen=screen)
 
-        #GLOBALS.MISSILES.draw(screen)
         GLOBALS.MISSILES.updatex(_screen=screen)
 
         GLOBALS.SHIPS.updatex(_screen=screen)
-        #GLOBALS.SHIPS.draw(screen)
 
-        #GLOBALS.HIT_MARKS.draw(screen)
         GLOBALS.HIT_MARKS.updatex(_screen=screen)
 
         # Check for collisions between the two groups

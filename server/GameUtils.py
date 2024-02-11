@@ -255,12 +255,12 @@ class HitMarks(_Group):
                 super().add(_hit_mark)
 
 
-class Flame(_Sprite):
+class AfterBurner(_Sprite):
     def __init__(self, _ship, _side):
         super().__init__(_ship.x, _ship.y)
 
         self._im = pygame.transform.scale(
-            _im := pygame.image.load(f"server/images/{_side}_flame.png").convert_alpha(),
+            _im := pygame.image.load(f"server/images/after_burner.png"),
             (_im.get_width() * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
@@ -297,7 +297,7 @@ class Flame(_Sprite):
         _ship = kwargs["_ship"]
         self._angle = _ship.angle
         _force = abs(_ship.force) if _ship.force <= 0 else 0
-        self._stretch = 2 * _force / GLOBALS.UNIT_FORCE
+        self._stretch = 3 * _force / GLOBALS.UNIT_FORCE
 
         self.__pos(_ship)
 
@@ -307,17 +307,17 @@ class Ship(_Sprite):
         super().__init__(_x, _y)
         self._player = _player
         self._im = pygame.transform.scale(
-            _im := pygame.image.load("server/images/ship.svg"),
+            _im := pygame.image.load("server/images/ship.png"),
             (200 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, 200 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
 
-        self._mass = 5
+        self._mass = 10
 
         self._flames = pygame.sprite.Group()
 
-        self._flames.add(Flame(_ship=self, _side="right"))
-        self._flames.add(Flame(_ship=self, _side="left"))
+        self._flames.add(AfterBurner(_ship=self, _side="right"))
+        self._flames.add(AfterBurner(_ship=self, _side="left"))
 
         self._primary_chamber = "right"
         self._primary_3_counter = 0
@@ -402,7 +402,7 @@ class Ship(_Sprite):
         self._velocity[0] += _add_speed * math.sin(math.radians(self.angle))
         self._velocity[1] += _add_speed * math.cos(math.radians(self.angle))
 
-        print(self.speed)
+        print(self._force)
 
         # speed constrains
         _maxSpeed = GLOBALS.MAX_SPEED * GLOBALS.W_RATIO
