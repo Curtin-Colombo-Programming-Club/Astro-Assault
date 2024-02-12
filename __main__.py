@@ -76,20 +76,14 @@ def Game():
                 # Check if Alt and Enter are pressed simultaneously
                 if event.key == pygame.K_RETURN and pygame.key.get_mods() & pygame.KMOD_ALT:
                     GLOBALS.FULLSCREEN = not GLOBALS.FULLSCREEN
-                    if GLOBALS.FULLSCREEN:
-                        screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
-                        GLOBALS.WIDTH = screen.get_width()
-                        GLOBALS.HEIGHT = screen.get_height()
-                        GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
-                        GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
-                        on_screen_resize()
-                    else:
-                        screen = pygame.display.set_mode((GLOBALS.WIDTH, GLOBALS.HEIGHT))
-                        GLOBALS.WIDTH = screen.get_width()
-                        GLOBALS.HEIGHT = screen.get_height()
-                        GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
-                        GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
-                        on_screen_resize()
+                    GLOBALS.p_H_RATIO = GLOBALS.H_RATIO
+                    GLOBALS.p_W_RATIO = GLOBALS.W_RATIO
+                    screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN) if GLOBALS.FULLSCREEN else pygame.display.set_mode((1280, 720))
+                    GLOBALS.WIDTH = screen.get_width()
+                    GLOBALS.HEIGHT = screen.get_height()
+                    GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
+                    GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
+                    on_screen_resize()
 
         current_tick_time = pygame.time.get_ticks()
         elapsed_time = current_tick_time - last_tick_time
@@ -128,7 +122,7 @@ def Game():
         pygame.display.update()
 
         # Control the frame rate
-        clk.tick(1000)
+        clk.tick(200)
         #print("fps", 1/(time.time()-st))
 
         last_tick_time = current_tick_time

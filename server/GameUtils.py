@@ -2,7 +2,6 @@ import datetime
 import math
 import random
 import time
-
 from server import GLOBALS
 import pygame
 
@@ -18,8 +17,8 @@ class _Sprite(pygame.sprite.Sprite):
         self._angle = 0
         self._d_angle = 0
         self._mass = 0
+        self._acceleration = 0
         self._velocity = [0, 0]
-        self._speed = 0
 
     @property
     def image(self):
@@ -64,12 +63,21 @@ class _Sprite(pygame.sprite.Sprite):
         return tuple(self._velocity)
 
     def update(self, *args, **kwargs):
-        self._angle -= self._d_angle / GLOBALS.FPS
+        self._angle -= self._d_angle / _fps if (_fps := GLOBALS.FPS) > 0 else 1
         if abs(self._angle) > 180:
             self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
 
-        _x = self.x + (self.velocity[0] * GLOBALS.ELAPSED_TIME) / 10
-        _y = self.y + (self.velocity[1] * GLOBALS.ELAPSED_TIME) / 10
+        _time = 1 / GLOBALS.TICK_RATE
+
+        _add_speed = self._acceleration * _time
+
+        self._velocity[0] += _add_speed * math.sin(math.radians(self.angle))
+        self._velocity[1] += _add_speed * math.cos(math.radians(self.angle))
+
+        print(self.speed, self.velocity, self._acceleration)
+
+        _x = self.x + self.velocity[0] * _time * GLOBALS.W_RATIO
+        _y = self.y + self.velocity[1] * _time * GLOBALS.H_RATIO
 
         if _x < 0:
             _x = GLOBALS.WIDTH
@@ -87,6 +95,8 @@ class _Sprite(pygame.sprite.Sprite):
             _im := pygame.image.load(_img),
             (_im.get_width() * _wf * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * _hf * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
+
+        self.rect.center = (self.x * GLOBALS.W_RATIO / GLOBALS.p_W_RATIO, self.y * GLOBALS.H_RATIO / GLOBALS.p_H_RATIO)
 
 
 class _Group(pygame.sprite.Group):
@@ -124,7 +134,7 @@ class _Group(pygame.sprite.Group):
 
 
 class Laser(_Sprite):
-    def __init__(self, _x, _y, _angle, _ship, _index=1):
+    def __init__(self, _x, _y, _angle, _ship: _Sprite, _index=1):
         super().__init__(_x=_x, _y=_y)
         self._ship = _ship
         self._index = _index
@@ -134,8 +144,8 @@ class Laser(_Sprite):
         )
         self._imc = self._im
         self._angle = _angle
-        _speed = -15 + _ship.speed
-        self._velocity = [_speed * math.sin(math.radians(_angle)), _speed * math.cos(math.radians(_angle))]
+        _speed = -1000
+        self._velocity = [_speed * math.sin(math.radians(_angle))+_ship.velocity[0], _speed * math.cos(math.radians(_angle))+_ship.velocity[1]]
         self._seconds = 0
 
     @property
@@ -163,8 +173,9 @@ class Missile(_Sprite):
         )
         self._imc = self._im
         self._angle = _angle
-        _speed = -10 + _ship.speed
-        self._velocity = [_speed * math.sin(math.radians(_angle)), _speed * math.cos(math.radians(_angle))]
+        _speed = -300
+        self._velocity = [_speed * math.sin(math.radians(_angle))+_ship.velocity[0], _speed * math.cos(math.radians(_angle))+_ship.velocity[1]]
+        self._acceleration = -600
         self._seconds = 0
 
     @property
@@ -412,41 +423,34 @@ class Ship(_Sprite):
             self.add(GLOBALS.SHIPS)
 
     def sockMoveUpdate(self, _dx, _dy):
+        # angle change
         self._d_angle = 100 * _dx
 
-        # add speed
+        # acceleration
         """
-        speed calculation
+        acceleration calculation
         =================
-        v = u + a . t
+        F = uf . f%
         F = m . a  →  a = F / m
         
-        ∴ +speed = a . t
+        ∴ acceleration = (unit force . force factor) / mass    
         """
         _unit_force = GLOBALS.UNIT_FORCE
         _force_factor = _dy if _dy <= 0 else _dy / 2
         self._force = _unit_force * _force_factor
 
-        _acceleration = self._force / self.mass
-
-        _now = time.time()
-        _time = 1
-
-        _add_speed = _acceleration * _time * GLOBALS.W_RATIO
-
-        self._velocity[0] += _add_speed * math.sin(math.radians(self.angle))
-        self._velocity[1] += _add_speed * math.cos(math.radians(self.angle))
+        self._acceleration = self._force / self.mass
         # -----
 
         # speed constrains
-        _maxSpeed = GLOBALS.MAX_SPEED
+        """_maxSpeed = GLOBALS.MAX_SPEED
         print(self.velocity)
 
         # max speed
         if abs(self.speed) > _maxSpeed:
             _angle = math.degrees(math.atan2(-self._velocity[0], -self._velocity[1]))
             self._velocity[0] = - _maxSpeed * math.sin(math.radians(_angle))
-            self._velocity[1] = - _maxSpeed * math.cos(math.radians(_angle))
+            self._velocity[1] = - _maxSpeed * math.cos(math.radians(_angle))"""
 
     def sockTriggerUpdate(self, _n):
         if _n == 2:
@@ -477,7 +481,7 @@ class Ships(_Group):
         super().__init__(_ships)
 
     @property
-    def ships(self) :
+    def ships(self):
         return self.sprites()
 
     def add(self, *_ships):
@@ -486,8 +490,9 @@ class Ships(_Group):
                 super().add(_ship)
 
     def newShip(self, _player) -> Ship:
-        _ship = Ship(_player=_player, _x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT))
-        self.add(_player)
+        #_ship = Ship(_player=_player, _x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT))
+        _ship = Ship(_player=_player, _x=400, _y=0)
+        self.add(_ship)
 
         return _ship
 
