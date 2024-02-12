@@ -74,8 +74,6 @@ class _Sprite(pygame.sprite.Sprite):
         self._velocity[0] += _add_speed * math.sin(math.radians(self.angle))
         self._velocity[1] += _add_speed * math.cos(math.radians(self.angle))
 
-        print(self.speed, self.velocity, self._acceleration)
-
         _x = self.x + self.velocity[0] * _time * GLOBALS.W_RATIO
         _y = self.y + self.velocity[1] * _time * GLOBALS.H_RATIO
 
@@ -348,7 +346,7 @@ class Ship(_Sprite):
         super().__init__(_x, _y)
         self._player = _player
         self._im = pygame.transform.scale(
-            _im := pygame.image.load("server/images/ship.png"),
+            _im := pygame.image.load("server/images/ship.svg"),
             (200 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, 200 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
@@ -393,8 +391,12 @@ class Ship(_Sprite):
         return self._dead
 
     def update(self, *args, **kwargs):
-        super().update()
         _screen = kwargs["_screen"]
+
+        pygame.draw.rect(_screen, (0, 0, 255), self.rect, 2)
+        _username = pygame.transform.scale(_im := pygame.font.Font(None, 40).render(self.player.username, True, (255, 255, 255)), (_im.get_width() * GLOBALS.W_RATIO * GLOBALS.C_RATIO, _im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO))
+        _screen.blit(_username, (self.x - _username.get_width() / 2, self.rect.top - _username.get_height() - 10 * GLOBALS.H_RATIO))
+        super().update()
         self._flames.update(_ship=self)
         self._flames.draw(_screen)
         # timers
@@ -467,7 +469,7 @@ class Ship(_Sprite):
                     self._secondary_timing = True
 
     def on_screen_resize(self):
-        self._on_screen_resize(_img="server/images/ship.png", _wf=1, _hf=1)
+        self._on_screen_resize(_img="server/images/ship.svg", _wf=1, _hf=1)
 
     def __str__(self):
         return (f"Ship(\n"
@@ -501,7 +503,9 @@ class Player:
     def __init__(self, _token: str):
         self.__online = False
         self.__lastOnline = datetime.datetime.now()
+
         self.__token = _token
+        self.__username = "user-name"
 
         self.__ship: Ship = GLOBALS.SHIPS.newShip(_player=self)
         self.__kills = 0
@@ -518,6 +522,10 @@ class Player:
     @property
     def token(self):
         return self.__token
+
+    @property
+    def username(self):
+        return self.__username
 
     @property
     def ship(self):

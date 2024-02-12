@@ -61,7 +61,7 @@ def Game():
     print("screen", hasattr(screen, "blits"))
 
     # Set up font
-    font = pygame.font.Font(None, 20)  # You can choose your own font and size
+    font = pygame.font.Font(None, 45)  # You can choose your own font and size
 
     # Main game loop
     clk = pygame.time.Clock()
@@ -84,6 +84,7 @@ def Game():
                     GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
                     GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
                     on_screen_resize()
+                    print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
 
         current_tick_time = pygame.time.get_ticks()
         elapsed_time = current_tick_time - last_tick_time
@@ -115,7 +116,7 @@ def Game():
         GLOBALS.FPS = clk.get_fps()
 
         # Render FPS text
-        fps_text = font.render("FPS: " + str(int(GLOBALS.FPS)), True, (0, 255, 10))
+        fps_text = pygame.transform.scale(_im := font.render(str(int(GLOBALS.FPS)), True, (0, 255, 10)), (_im.get_width() * GLOBALS.W_RATIO * GLOBALS.C_RATIO, _im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO))
         screen.blit(fps_text, (10, 10))  # Adjust position as needed
 
         # Update the display
