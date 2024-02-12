@@ -20,6 +20,14 @@ GLOBALS.MISSILES = Missiles()
 GLOBALS.HIT_MARKS = HitMarks()
 GLOBALS.GAMERUNNING = False
 
+
+def on_screen_resize():
+    GLOBALS.SHIPS.on_screen_resize()
+    GLOBALS.LASERS.on_screen_resize()
+    GLOBALS.MISSILES.on_screen_resize()
+    GLOBALS.HIT_MARKS.on_screen_resize()
+
+
 # inits
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -57,7 +65,7 @@ def Game():
 
     # Main game loop
     clk = pygame.time.Clock()
-    last_frame_time = pygame.time.get_ticks()
+    last_tick_time = pygame.time.get_ticks()
     while True:
         st = time.time()
         for event in pygame.event.get():
@@ -72,18 +80,21 @@ def Game():
                         screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
                         GLOBALS.WIDTH = screen.get_width()
                         GLOBALS.HEIGHT = screen.get_height()
-                        print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
+                        GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
+                        GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
+                        on_screen_resize()
                     else:
                         screen = pygame.display.set_mode((GLOBALS.WIDTH, GLOBALS.HEIGHT))
                         GLOBALS.WIDTH = screen.get_width()
                         GLOBALS.HEIGHT = screen.get_height()
-                        print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
+                        GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
+                        GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
+                        on_screen_resize()
 
-
-        current_time = pygame.time.get_ticks()
-        elapsed_time = current_time - last_frame_time
+        current_tick_time = pygame.time.get_ticks()
+        elapsed_time = current_tick_time - last_tick_time
         GLOBALS.ELAPSED_TIME = elapsed_time
-        #print("fps", 1000/elapsed_time, pygame.time.get_ticks())
+        GLOBALS.TICK_RATE = 1000/elapsed_time if elapsed_time > 0 else 1
         # Update game logic here
 
         # Clear the screen
@@ -117,8 +128,10 @@ def Game():
         pygame.display.update()
 
         # Control the frame rate
-        clk.tick(120)
+        clk.tick(1000)
         #print("fps", 1/(time.time()-st))
+
+        last_tick_time = current_tick_time
 
 
 GameThread = threading.Thread(target=Game)

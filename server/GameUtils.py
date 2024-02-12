@@ -1,6 +1,8 @@
 import datetime
 import math
 import random
+import time
+
 from server import GLOBALS
 import pygame
 
@@ -14,6 +16,7 @@ class _Sprite(pygame.sprite.Sprite):
         self.rect.center = (_x, _y)
         self._force = 0
         self._angle = 0
+        self._d_angle = 0
         self._mass = 0
         self._velocity = [0, 0]
         self._speed = 0
@@ -61,8 +64,12 @@ class _Sprite(pygame.sprite.Sprite):
         return tuple(self._velocity)
 
     def update(self, *args, **kwargs):
-        _x = self.x + self.velocity[0]
-        _y = self.y + self.velocity[1]
+        self._angle -= self._d_angle / GLOBALS.FPS
+        if abs(self._angle) > 180:
+            self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
+
+        _x = self.x + (self.velocity[0] * GLOBALS.ELAPSED_TIME) / 10
+        _y = self.y + (self.velocity[1] * GLOBALS.ELAPSED_TIME) / 10
 
         if _x < 0:
             _x = GLOBALS.WIDTH
@@ -74,6 +81,12 @@ class _Sprite(pygame.sprite.Sprite):
             _y = 0
 
         self._rect.center = (_x, _y)
+
+    def _on_screen_resize(self, _img, _wf, _hf):
+        self._im = pygame.transform.scale(
+            _im := pygame.image.load(_img),
+            (_im.get_width() * _wf * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * _hf * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+        )
 
 
 class _Group(pygame.sprite.Group):
@@ -105,14 +118,19 @@ class _Group(pygame.sprite.Group):
 
             return dirty"""
 
+    def on_screen_resize(self):
+        for sprite in self.sprites():
+            sprite.on_screen_resize()
+
 
 class Laser(_Sprite):
     def __init__(self, _x, _y, _angle, _ship, _index=1):
         super().__init__(_x=_x, _y=_y)
         self._ship = _ship
+        self._index = _index
         self._im = pygame.transform.scale(
             _im := pygame.image.load(f"server/images/laser{_index}.svg"),
-            (_im.get_width() * 4 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            (_im.get_width() * 4 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * 3 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
         self._angle = _angle
@@ -130,6 +148,9 @@ class Laser(_Sprite):
 
         if self._seconds > 1:
             self.kill()
+
+    def on_screen_resize(self):
+        self._on_screen_resize(_img=f"server/images/laser{self._index}.svg", _wf=4, _hf=3)
 
 
 class Missile(_Sprite):
@@ -157,6 +178,9 @@ class Missile(_Sprite):
         if self._seconds > 2:
             self.kill()
 
+    def on_screen_resize(self):
+        self._on_screen_resize(_img=f"server/images/missile.svg", _wf=2, _hf=2)
+
 
 class Lasers(_Group):
     def __init__(self, *_lasers):
@@ -172,8 +196,8 @@ class Lasers(_Group):
                 super().add(_laser)
 
     def newLaser(self, _ship) -> Laser:
-        _x_off = 30 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if _ship.primary_chamber == "left" else 1)
-        _y_off = 10 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
+        _x_off = 31 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if _ship.primary_chamber == "left" else 1)
+        _y_off = 11 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
         _offset_theta = math.atan2(-_y_off, _x_off)
         _r = math.sqrt(_x_off ** 2 + _y_off ** 2)
         _ship_angle = -_ship.angle
@@ -204,9 +228,9 @@ class Missiles(_Group):
                 super().add(_missile)
 
     def newMissile(self, _ship) -> Missile:
-        _x_off = 35 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if _ship.secondary_chamber == "left" else 1)
-        _y_off = 10 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
-        _offset_theta = math.atan2(-_y_off, _x_off)
+        _x_off = 36 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if _ship.secondary_chamber == "left" else 1)
+        _y_off = -11 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
+        _offset_theta = math.atan2(_y_off, _x_off)
         _r = math.sqrt(_x_off ** 2 + _y_off ** 2)
         _ship_angle = -_ship.angle
 
@@ -239,6 +263,9 @@ class LaserHit(_Sprite):
         self._im.set_alpha(int(255 - 255 * self._timer))
         if self._timer >= 1:
             self.kill()
+
+    def on_screen_resize(self):
+        self._on_screen_resize(_img=f"server/images/laser_hit.svg", _wf=2, _hf=2)
 
 
 class MissileHit(_Sprite):
@@ -282,16 +309,16 @@ class AfterBurner(_Sprite):
         return self._imc
 
     def __pos(self, _ship):
-        _x_off = -55 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if self._side == "left" else 1)
-        _y_off = -83 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
-        _offset_theta = math.atan2(-_y_off, _x_off)
+        _x_off = 56 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if self._side == "left" else 1)
+        _y_off = 82 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
+        _offset_theta = math.atan2(_y_off, _x_off)
         _r = math.sqrt(_x_off ** 2 + _y_off ** 2)
         _ship_angle = -_ship.angle
 
         # print("new l", _ship_angle,  _offset_theta)
 
         self._rect.center = (_ship.x + (_r * math.cos(math.radians(_ship_angle) + _offset_theta)) - math.sin(math.radians(_ship_angle)) * self._im.get_height() * GLOBALS.W_RATIO * GLOBALS.C_RATIO * self._stretch / 2,
-                             _ship.y + (_r * math.sin(math.radians(_ship_angle) + _offset_theta)) + math.cos(math.radians(_ship_angle)) * self._im.get_height() * GLOBALS.W_RATIO * GLOBALS.C_RATIO * self._stretch / 2)
+                             _ship.y + (_r * math.sin(math.radians(_ship_angle) + _offset_theta)) + math.cos(math.radians(_ship_angle)) * self._im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO * self._stretch / 2)
 
     def update(self, *args, **kwargs):
         _ship = kwargs["_ship"]
@@ -300,6 +327,9 @@ class AfterBurner(_Sprite):
         self._stretch = 3 * _force / GLOBALS.UNIT_FORCE
 
         self.__pos(_ship)
+
+    def on_screen_resize(self):
+        self._on_screen_resize(_img=f"server/images/after_burner.png", _wf=1, _hf=1)
 
 
 class Ship(_Sprite):
@@ -328,6 +358,8 @@ class Ship(_Sprite):
 
         self._health = 100
         self._dead = False
+
+        self._last_movement_update = 0
 
     @property
     def player(self):
@@ -380,10 +412,9 @@ class Ship(_Sprite):
             self.add(GLOBALS.SHIPS)
 
     def sockMoveUpdate(self, _dx, _dy):
-        self._angle -= ((1e-1 * _dx) * GLOBALS.ELAPSED_TIME) / 1000
-        if abs(self._angle) > 180:
-            self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
+        self._d_angle = 100 * _dx
 
+        # add speed
         """
         speed calculation
         =================
@@ -395,12 +426,17 @@ class Ship(_Sprite):
         _unit_force = GLOBALS.UNIT_FORCE
         _force_factor = _dy if _dy <= 0 else _dy / 2
         self._force = _unit_force * _force_factor
+
         _acceleration = self._force / self.mass
-        _time = (1 * GLOBALS.ELAPSED_TIME) * 1000
+
+        _now = time.time()
+        _time = 1
+
         _add_speed = _acceleration * _time * GLOBALS.W_RATIO
 
         self._velocity[0] += _add_speed * math.sin(math.radians(self.angle))
         self._velocity[1] += _add_speed * math.cos(math.radians(self.angle))
+        # -----
 
         # speed constrains
         _maxSpeed = GLOBALS.MAX_SPEED
@@ -425,6 +461,9 @@ class Ship(_Sprite):
                 self._secondary_chamber = "left" if self._secondary_chamber == "right" else "right"
                 if self._secondary_chamber == "right":
                     self._secondary_timing = True
+
+    def on_screen_resize(self):
+        self._on_screen_resize(_img="server/images/ship.png", _wf=1, _hf=1)
 
     def __str__(self):
         return (f"Ship(\n"
