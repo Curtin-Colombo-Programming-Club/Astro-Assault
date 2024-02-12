@@ -7,6 +7,12 @@ import pygame
 
 
 class _Sprite(pygame.sprite.Sprite):
+    """
+    A class inherited from pygame.sprite.Sprite with custom and overridden methods
+
+    :param
+    :a
+    """
     def __init__(self, _x, _y):
         super().__init__()
         self._im = pygame.surface.Surface((100, 100))
