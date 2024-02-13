@@ -4,15 +4,186 @@ import random
 import time
 from server import GLOBALS
 import pygame
+from typing import Self
+
+
+class _StaticSprite(pygame.sprite.Sprite):
+    """
+    A class representing a static sprite that could be altered manually.
+
+    Attributes:
+        __img_path: A string representing the file path of the sprite's image.
+        __w_factor: A float representing the width factor for scaling the image.
+        __h_factor: A float representing the height factor for scaling the image.
+        _im: A pygame surface representing the scaled image.
+        _imc: A copy of the sprite's image with the current rotation applied.
+        _rect: A pygame Rect representing the sprite's bounding rectangle.
+        _angle: A float representing the angle of rotation of the sprite.
+
+    Parameters:
+        _img_path: A string representing the file path of the sprite's image.
+        _center: A tuple representing the center coordinates of the sprite.
+        _w_factor: A float representing the width factor for scaling the image (default is 1).
+        _h_factor: A float representing the height factor for scaling the image (default is 1).
+        _angle: A float representing the initial angle of rotation of the sprite (default is 0).
+
+    Methods:
+        image: A property that returns the rotated image of the sprite.
+        rect: A property that returns the bounding rectangle of the sprite.
+        center: A property that returns the center coordinates of the sprite.
+        x: A property that returns the x-coordinate of the sprite's center.
+        y: A property that returns the y-coordinate of the sprite's center.
+        angle: A property that returns the current angle of rotation of the sprite.
+        _on_screen_resize: A method to adjust the sprite's image when the screen is resized.
+    """
+    def __init__(self, _img_path, _center, _w_factor=1, _h_factor=1, _angle=0):
+        super().__init__()
+        self.__img_path = _img_path
+        self.__w_factor = _w_factor
+        self.__h_factor = _h_factor
+        self._im = pygame.transform.scale(
+            _im := pygame.image.load(_img_path),
+            (
+                _im.get_width() * _w_factor * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
+                _im.get_height() * _h_factor * GLOBALS.C_RATIO * GLOBALS.H_RATIO
+            )
+        )
+        self._imc = self._im
+        self._rect = self._im.get_rect()
+        self.rect.center = _center
+        self._angle = 0
+
+    @property
+    def image(self) -> pygame.image:
+        """
+        Get the rotated image of the sprite.
+
+        Returns:
+            A pygame Surface object representing the rotated image of the sprite.
+        """
+        self._imc = pygame.transform.rotate(self._im, self.angle)
+        return self._imc
+
+    @property
+    def rect(self) -> pygame.Rect:
+        """
+        Get the bounding rectangle of the sprite.
+
+        Returns:
+            A pygame Rect object representing the bounding rectangle of the sprite.
+        """
+        self._rect = self._imc.get_rect(center=self.center)
+        return self._rect
+
+    @property
+    def center(self) -> tuple:
+        """
+        Get the center coordinates of the sprite.
+
+        Returns:
+            A tuple representing the center coordinates (x, y) of the sprite.
+        """
+        return tuple(self._rect.center)
+
+    @property
+    def x(self) -> int | float:
+        """
+        Get the x-coordinate of the sprite's center.
+
+        Returns:
+            An integer or float representing the x-coordinate of the sprite's center.
+        """
+        return self._rect.centerx
+
+    @property
+    def y(self) -> int | float:
+        """
+        Get the y-coordinate of the sprite's center.
+
+        Returns:
+            An integer or float representing the y-coordinate of the sprite's center.
+        """
+        return self.rect.centery
+
+    @property
+    def angle(self) -> int | float:
+        """
+        Get the current angle of rotation of the sprite.
+
+        Returns:
+            A float representing the current angle of rotation of the sprite.
+        """
+        return self._angle
+
+    def _on_screen_resize(self) -> None:
+        """
+        Adjust the sprite's image when the screen is resized.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+        self._im = pygame.transform.scale(
+            _im := pygame.image.load(self.__img_path),
+            (_im.get_width() * self.__w_factor * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
+             _im.get_height() * self.__h_factor * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+        )
+
+        self.rect.center = (self.x * GLOBALS.W_RATIO / GLOBALS.p_W_RATIO, self.y * GLOBALS.H_RATIO / GLOBALS.p_H_RATIO)
+
+
+class _DynamicSprite(_StaticSprite):
+    def __init__(self, _img_path, _center, _w_factor=1, _h_factor=1, _angle=0):
+        super().__init__(_img_path=_img_path, _center=_center, _w_factor=_w_factor, _h_factor=_h_factor, _angle=_angle)
+        self._force = 0
+        self._angle = 0
+        self._d_angle = 0
+        self._mass = 0
+        self._acceleration = 0
+        self._velocity = [0, 0]
+
+    @property
+    def mass(self) -> int | float:
+        return self._mass
+
+    @property
+    def speed(self) -> int | float:
+        return math.sqrt(self._velocity[0] ** 2 + self._velocity[1] ** 2)
+
+    @property
+    def velocity(self) -> tuple:
+        return tuple(self._velocity)
+
+    def update(self, *args, **kwargs):
+        self._angle -= self._d_angle / _fps if (_fps := GLOBALS.FPS) > 0 else 1
+        if abs(self._angle) > 180:
+            self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
+
+        _time = 1 / GLOBALS.TICK_RATE
+
+        _add_speed = self._acceleration * _time
+
+        self._velocity[0] += _add_speed * math.sin(math.radians(self.angle))
+        self._velocity[1] += _add_speed * math.cos(math.radians(self.angle))
+
+        _x = self.x + self.velocity[0] * _time * GLOBALS.W_RATIO
+        _y = self.y + self.velocity[1] * _time * GLOBALS.H_RATIO
+
+        if _x < 0:
+            _x = GLOBALS.WIDTH
+        if _x > GLOBALS.WIDTH:
+            _x = 0
+        if _y < 0:
+            _y = GLOBALS.HEIGHT
+        if _y > GLOBALS.HEIGHT:
+            _y = 0
+
+        self._rect.center = (_x, _y)
 
 
 class _Sprite(pygame.sprite.Sprite):
-    """
-    A class inherited from pygame.sprite.Sprite with custom and overridden methods
-
-    :param
-    :a
-    """
     def __init__(self, _x, _y):
         super().__init__()
         self._im = pygame.surface.Surface((100, 100))
@@ -62,7 +233,7 @@ class _Sprite(pygame.sprite.Sprite):
 
     @property
     def speed(self):
-        return math.sqrt(self._velocity[0]**2 + self._velocity[1]**2)
+        return math.sqrt(self._velocity[0] ** 2 + self._velocity[1] ** 2)
 
     @property
     def velocity(self):
@@ -73,15 +244,29 @@ class _Sprite(pygame.sprite.Sprite):
         if abs(self._angle) > 180:
             self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
 
-        _time = 1 / GLOBALS.TICK_RATE
+        """
+        s = u .t + 0.5 . a . t**2
+        """
 
-        _add_speed = self._acceleration * _time
+        _t = 1 / GLOBALS.TICK_RATE
 
-        self._velocity[0] += _add_speed * math.sin(math.radians(self.angle))
-        self._velocity[1] += _add_speed * math.cos(math.radians(self.angle))
+        # initial velocity
+        _u = self._velocity
 
-        _x = self.x + self.velocity[0] * _time * GLOBALS.W_RATIO
-        _y = self.y + self.velocity[1] * _time * GLOBALS.H_RATIO
+        _u_t_x = _u[0] * _t
+        _u_t_y = _u[1] * _t
+
+        # final velocity
+        self._velocity[0] += self._acceleration * math.sin(math.radians(self.angle)) * _t
+        self._velocity[1] += self._acceleration * math.cos(math.radians(self.angle)) * _t
+
+        _s_x = self._velocity[0] * _t
+        _s_y = self._velocity[1] * _t
+
+        print(_s_x, _s_y, self.speed)
+
+        _x = self.x + _s_x
+        _y = self.y + _s_y
 
         if _x < 0:
             _x = GLOBALS.WIDTH
@@ -97,42 +282,59 @@ class _Sprite(pygame.sprite.Sprite):
     def _on_screen_resize(self, _img, _wf, _hf):
         self._im = pygame.transform.scale(
             _im := pygame.image.load(_img),
-            (_im.get_width() * _wf * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * _hf * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            (_im.get_width() * _wf * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
+             _im.get_height() * _hf * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
 
         self.rect.center = (self.x * GLOBALS.W_RATIO / GLOBALS.p_W_RATIO, self.y * GLOBALS.H_RATIO / GLOBALS.p_H_RATIO)
 
 
 class _Group(pygame.sprite.Group):
+    """
+    A custom sprite group class inherited from pygame.sprite.Group.
+
+    This class extends the functionality of the pygame.sprite.Group class by adding custom methods.
+
+    Parameters:
+        *_sprites: Optional initial sprites to add to the group.
+
+    Methods:
+        updatex: Updates and renders all sprites in the group on the specified screen.
+        on_screen_resize: Calls the on_screen_resize method for all sprites in the group.
+    """
+
     def __init__(self, *_sprites):
         super().__init__(_sprites)
 
     def updatex(self, *args, **kwargs):
+        """
+        Update and render all sprites in the group on the specified screen.
+
+        Parameters:
+            *_args: Optional arguments passed to the update method of each sprite.
+            **kwargs: Keyword arguments passed to the update method of each sprite.
+                "_screen": The pygame surface on which to render the sprites.
+                "special_flags": Optional special flags for blit operations.
+
+        Returns:
+            None
+        """
         _screen = kwargs["_screen"]
         _special_flags = kwargs.get("special_flags", 0)
         for sprite in self.sprites():
             sprite.update(_screen=_screen)
             _screen.blit(sprite.image, sprite.rect, None, _special_flags)
-            """if hasattr(_screen, "blits"):
-                self.spritedict.update(
-                    zip(
-                        sprites,
-                        _screen.blits(
-                            (spr.image, spr.rect, None, special_flags) for spr in sprites
-                        ),
-                    )
-                )
-            else:
-                for spr in sprites:
-                    self.spritedict[spr] = _screen.blit(
-                        spr.image, spr.rect, None, _special_flags
-                    )
-            self.lostsprites = []
-            dirty = self.lostsprites
-
-            return dirty"""
 
     def on_screen_resize(self):
+        """
+        Call the on_screen_resize method for all sprites in the group.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
         for sprite in self.sprites():
             sprite.on_screen_resize()
 
@@ -144,12 +346,14 @@ class Laser(_Sprite):
         self._index = _index
         self._im = pygame.transform.scale(
             _im := pygame.image.load(f"server/images/laser{_index}.svg"),
-            (_im.get_width() * 4 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * 3 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            (_im.get_width() * 4 * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
+             _im.get_height() * 3 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
         self._angle = _angle
         _speed = -1000
-        self._velocity = [_speed * math.sin(math.radians(_angle))+_ship.velocity[0], _speed * math.cos(math.radians(_angle))+_ship.velocity[1]]
+        self._velocity = [_speed * math.sin(math.radians(_angle)) + _ship.velocity[0],
+                          _speed * math.cos(math.radians(_angle)) + _ship.velocity[1]]
         self._seconds = 0
 
     @property
@@ -173,12 +377,14 @@ class Missile(_Sprite):
         self._ship = _ship
         self._im = pygame.transform.scale(
             _im := pygame.image.load(f"server/images/missile.svg"),
-            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
+             _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
         self._angle = _angle
         _speed = -300
-        self._velocity = [_speed * math.sin(math.radians(_angle))+_ship.velocity[0], _speed * math.cos(math.radians(_angle))+_ship.velocity[1]]
+        self._velocity = [_speed * math.sin(math.radians(_angle)) + _ship.velocity[0],
+                          _speed * math.cos(math.radians(_angle)) + _ship.velocity[1]]
         self._acceleration = -600
         self._seconds = 0
 
@@ -265,7 +471,8 @@ class LaserHit(_Sprite):
         super().__init__(_x, _y)
         self._im = pygame.transform.scale(
             _im := pygame.image.load(f"server/images/laser_hit.svg").convert_alpha(),
-            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
+             _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
         )
         self._imc = self._im
         self._angle = _angle
@@ -317,7 +524,7 @@ class AfterBurner(_Sprite):
         self._imc = pygame.transform.rotate(
             pygame.transform.scale(
                 self._im,
-                (self._im.get_width(), self._im.get_height()*self._stretch)
+                (self._im.get_width(), self._im.get_height() * self._stretch)
             ),
             self.angle
         )
@@ -332,8 +539,11 @@ class AfterBurner(_Sprite):
 
         # print("new l", _ship_angle,  _offset_theta)
 
-        self._rect.center = (_ship.x + (_r * math.cos(math.radians(_ship_angle) + _offset_theta)) - math.sin(math.radians(_ship_angle)) * self._im.get_height() * GLOBALS.W_RATIO * GLOBALS.C_RATIO * self._stretch / 2,
-                             _ship.y + (_r * math.sin(math.radians(_ship_angle) + _offset_theta)) + math.cos(math.radians(_ship_angle)) * self._im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO * self._stretch / 2)
+        self._rect.center = (_ship.x + (_r * math.cos(math.radians(_ship_angle) + _offset_theta)) - math.sin(
+            math.radians(_ship_angle)) * self._im.get_height() * GLOBALS.W_RATIO * GLOBALS.C_RATIO * self._stretch / 2,
+                             _ship.y + (_r * math.sin(math.radians(_ship_angle) + _offset_theta)) + math.cos(
+                                 math.radians(
+                                     _ship_angle)) * self._im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO * self._stretch / 2)
 
     def update(self, *args, **kwargs):
         _ship = kwargs["_ship"]
@@ -400,14 +610,17 @@ class Ship(_Sprite):
         _screen = kwargs["_screen"]
 
         pygame.draw.rect(_screen, (0, 0, 255), self.rect, 2)
-        _username = pygame.transform.scale(_im := pygame.font.Font(None, 40).render(self.player.username, True, (255, 255, 255)), (_im.get_width() * GLOBALS.W_RATIO * GLOBALS.C_RATIO, _im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO))
-        _screen.blit(_username, (self.x - _username.get_width() / 2, self.rect.top - _username.get_height() - 10 * GLOBALS.H_RATIO))
+        _username = pygame.transform.scale(
+            _im := pygame.font.Font(None, 40).render(self.player.username, True, (255, 255, 255)),
+            (_im.get_width() * GLOBALS.W_RATIO * GLOBALS.C_RATIO, _im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO))
+        _screen.blit(_username, (
+        self.x - _username.get_width() / 2, self.rect.top - _username.get_height() - 10 * GLOBALS.H_RATIO))
         super().update()
         self._flames.update(_ship=self)
         self._flames.draw(_screen)
         # timers
         if self._secondary_timing:
-            self._secondary_timer += 1/GLOBALS.FPS
+            self._secondary_timer += 1 / GLOBALS.FPS
             if self._secondary_timer >= 5:
                 self._secondary_timer = 0
                 self._secondary_timing = False
@@ -498,7 +711,7 @@ class Ships(_Group):
                 super().add(_ship)
 
     def newShip(self, _player) -> Ship:
-        #_ship = Ship(_player=_player, _x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT))
+        # _ship = Ship(_player=_player, _x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT))
         _ship = Ship(_player=_player, _x=400, _y=0)
         self.add(_ship)
 
@@ -580,7 +793,7 @@ class Players:
         for _player in _players:
             if isinstance(_player, Player):
                 self.players[_player.token] = _player
-                #_player.ship.add(GLOBALS.SHIPS)
+                # _player.ship.add(GLOBALS.SHIPS)
 
     def newPlayer(self, _token: str) -> Player:
         _player = Player(_token)
@@ -596,7 +809,9 @@ def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
     if _TSprite.ship != _TSprite2 and _TSprite.rect.colliderect(_TSprite2.rect):
         try:
             _tc = _TSprite.center
-            _a = _TSprite2.image.get_at((_TSprite.center[0] - _TSprite2.rect.left, _TSprite.center[1] - _TSprite2.rect.top))[3]
+            _a = \
+            _TSprite2.image.get_at((_TSprite.center[0] - _TSprite2.rect.left, _TSprite.center[1] - _TSprite2.rect.top))[
+                3]
             if _a:
                 _hm = LaserHit(_x=_tc[0], _y=_tc[1], _angle=_TSprite.angle)
                 GLOBALS.HIT_MARKS.add(_hm)

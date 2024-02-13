@@ -17,9 +17,12 @@ W_RATIO = 1
 p_W_RATIO = W_RATIO
 C_RATIO = 2 / 3
 UNIT_FORCE = 300000
+# η
+NEETA = 1
 MAX_SPEED = 5
 PLAYERS: Players | None = None
 SHIPS: Ships | None = None
 LASERS: Lasers | None = None
 MISSILES: Missiles | None = None
 HIT_MARKS: HitMarks | None = None
+SHIP_MASKS = None
