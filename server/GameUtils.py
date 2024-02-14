@@ -36,7 +36,18 @@ class _StaticSprite(pygame.sprite.Sprite):
         angle: A property that returns the current angle of rotation of the sprite.
         _on_screen_resize: A method to adjust the sprite's image when the screen is resized.
     """
+
     def __init__(self, _img_path, _center, _w_factor=1, _h_factor=1, _angle=0):
+        """
+        Initializes a _StaticSprite object.
+
+        Args:
+            _img_path (str): The path to the image file.
+            _center (tuple): The initial center coordinates of the sprite.
+            _w_factor (int | float): The width scaling factor of the sprite.
+            _h_factor (int | float): The height scaling factor of the sprite.
+            _angle (int | float): The initial angle of rotation of the sprite.
+        """
         super().__init__()
         self.__img_path = _img_path
         self.__w_factor = _w_factor
@@ -51,7 +62,7 @@ class _StaticSprite(pygame.sprite.Sprite):
         self._imc = self._im
         self._rect = self._im.get_rect()
         self.rect.center = _center
-        self._angle = 0
+        self._angle = _angle
 
     @property
     def image(self) -> pygame.image:
@@ -119,9 +130,6 @@ class _StaticSprite(pygame.sprite.Sprite):
         """
         Adjust the sprite's image when the screen is resized.
 
-        Parameters:
-            None
-
         Returns:
             None
         """
@@ -180,72 +188,96 @@ class _DynamicSprite(_StaticSprite):
         if _y > GLOBALS.HEIGHT:
             _y = 0
 
-        self._rect.center = (_x, _y)
+    Attributes:
+        _force (int | float): The force applied to the sprite.
+        _d_angle (int | float): The change in angle of rotation per tick.
+        _mass (int | float): The mass of the sprite.
+        _acceleration (int | float): The acceleration of the sprite.
+        _velocity (tuple): The velocity of the sprite in (x, y) format.
 
+    Methods:
+        force: Getter for the force property.
+        mass: Getter for the mass property.
+        speed: Getter for the speed property.
+        velocity: Getter for the velocity property.
+        update(*args, **kwargs): Updates the position of the sprite based on physics calculations.
+    """
 
-class _Sprite(pygame.sprite.Sprite):
-    def __init__(self, _x, _y):
-        super().__init__()
-        self._im = pygame.surface.Surface((100, 100))
-        self._imc = self._im
-        self._rect = self._im.get_rect()
-        self.rect.center = (_x, _y)
-        self._force = 0
-        self._angle = 0
+    def __init__(self, _img_path, _center, _w_factor=1, _h_factor=1, _angle=0):
+        """
+        Initializes a _DynamicSprite object.
+
+        Args:
+            _img_path (str): The path to the image file.
+            _center (tuple): The initial center coordinates of the sprite.
+            _w_factor (int | float): The width scaling factor of the sprite.
+            _h_factor (int | float): The height scaling factor of the sprite.
+            _angle (int | float): The initial angle of rotation of the sprite.
+        """
+        super().__init__(_img_path=_img_path, _center=_center, _w_factor=_w_factor, _h_factor=_h_factor, _angle=_angle)
+        self._force = GLOBALS.FORCES.newForce(_color=(0, 0, 255), _text="Fe")
         self._d_angle = 0
         self._mass = 0
         self._acceleration = 0
         self._velocity = [0, 0]
 
     @property
-    def image(self):
-        self._imc = pygame.transform.rotate(self._im, self.angle)
-        return self._imc
+    def force(self) -> "Force":
+        """
+        Getter for the force property.
 
-    @property
-    def rect(self):
-        self._rect = self._imc.get_rect(center=self.center)
-        return self._rect
-
-    @property
-    def center(self):
-        return tuple(self._rect.center)
-
-    @property
-    def x(self):
-        return self._rect.centerx
-
-    @property
-    def y(self):
-        return self.rect.centery
-
-    @property
-    def force(self):
+        Returns:
+            An int or float
+        """
         return self._force
 
     @property
-    def angle(self):
-        return self._angle
-
-    @property
-    def mass(self):
+    def mass(self) -> int | float:
+        """
+        Getter for the mass property.
+        """
         return self._mass
 
     @property
-    def speed(self):
+    def speed(self) -> int | float:
+        """
+        Getter for the speed property.
+        """
         return math.sqrt(self._velocity[0] ** 2 + self._velocity[1] ** 2)
 
     @property
-    def velocity(self):
+    def velocity(self) -> tuple:
+        """
+        Getter for the velocity property.
+        """
         return tuple(self._velocity)
 
-    def update(self, *args, **kwargs):
-        self._angle -= self._d_angle / _fps if (_fps := GLOBALS.FPS) > 0 else 1
+    def update(self, *args, **kwargs) -> Self:
+        """
+        Updates the position of the sprite based on physics calculations.
+
+        Returns:
+            _DynamicSprite: The updated _DynamicSprite object.
+        """
+
+        # angle change
+        self._angle -= self._d_angle / _tr if (_tr := GLOBALS.TICK_RATE) > 0 else 1
         if abs(self._angle) > 180:
             self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
 
+        # velocity and displacement
         """
-        s = u .t + 0.5 . a . t**2
+        Calculations
+        ============
+        Final Velocity
+        --------------
+        v = u + a . t
+        
+        Displacement
+        ------------
+        Since updates are called at each computing elapsed time period (1/tick-rate)
+        We break the velocity and time planes into segments and find the area in it
+        ∴ s = 0.5 (u + v) . t  ←  trapezium rule
         """
 
         _t = 1 / GLOBALS.TICK_RATE
@@ -265,6 +297,7 @@ class _Sprite(pygame.sprite.Sprite):
 
         print(_s_x, _s_y, self.speed)
 
+        # Update position
         _x = self.x + _s_x
         _y = self.y + _s_y
 
@@ -279,14 +312,8 @@ class _Sprite(pygame.sprite.Sprite):
 
         self._rect.center = (_x, _y)
 
-    def _on_screen_resize(self, _img, _wf, _hf):
-        self._im = pygame.transform.scale(
-            _im := pygame.image.load(_img),
-            (_im.get_width() * _wf * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
-             _im.get_height() * _hf * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
-        )
-
-        self.rect.center = (self.x * GLOBALS.W_RATIO / GLOBALS.p_W_RATIO, self.y * GLOBALS.H_RATIO / GLOBALS.p_H_RATIO)
+        # returns self
+        return self
 
 
 class _Group(pygame.sprite.Group):
@@ -339,49 +366,110 @@ class _Group(pygame.sprite.Group):
             sprite.on_screen_resize()
 
 
-class Laser(_Sprite):
-    def __init__(self, _x, _y, _angle, _ship: _Sprite, _index=1):
-        super().__init__(_x=_x, _y=_y)
+class Laser(_DynamicSprite):
+    """
+    A class representing a laser fired from a ship.
+
+    Inherits from _DynamicSprite.
+
+    Attributes:
+        _ship (Ship): The ship from which the laser is fired.
+        _index (int): The index of the laser image.
+        _seconds (float): The number of seconds the laser has existed.
+
+    Methods:
+        ship: Getter for the ship property.
+        update(*args, **kwargs): Updates the position and state of the laser.
+        on_screen_resize(): Handles the resizing of the laser sprite when the screen size changes.
+
+    """
+
+    def __init__(self, _x, _y, _angle, _ship: "Ship", _index=1):
+        """
+        Initializes a Laser object.
+
+        Args:
+            _x (int | float): The x-coordinate of the laser's starting position.
+            _y (int | float): The y-coordinate of the laser's starting position.
+            _angle (int | float): The angle at which the laser is fired.
+            _ship (_DynamicSprite): The ship from which the laser is fired.
+            _index (int, optional): The index of the laser image. Defaults to 1.
+        """
+
+        super().__init__(_img_path=f"server/images/laser{_index}.svg",
+                         _center=(_x, _y),
+                         _angle=_angle,
+                         _w_factor=4,
+                         _h_factor=3)
         self._ship = _ship
         self._index = _index
-        self._im = pygame.transform.scale(
-            _im := pygame.image.load(f"server/images/laser{_index}.svg"),
-            (_im.get_width() * 4 * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
-             _im.get_height() * 3 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
-        )
-        self._imc = self._im
-        self._angle = _angle
+
         _speed = -1000
         self._velocity = [_speed * math.sin(math.radians(_angle)) + _ship.velocity[0],
                           _speed * math.cos(math.radians(_angle)) + _ship.velocity[1]]
         self._seconds = 0
 
     @property
-    def ship(self):
+    def ship(self) -> "Ship":
+        """
+        Getter for the ship property.
+        """
         return self._ship
 
-    def update(self, *args, **kwargs):
+    def update(self, *args, **kwargs) -> Self:
+        """
+        Updates the position and state of the laser.
+        """
         super().update()
         self._seconds += 1 / GLOBALS.FPS
 
         if self._seconds > 1:
             self.kill()
 
+        return self
+
     def on_screen_resize(self):
-        self._on_screen_resize(_img=f"server/images/laser{self._index}.svg", _wf=4, _hf=3)
+        """
+        Handles the resizing of the laser sprite when the screen size changes.
+        """
+        self._on_screen_resize()
 
 
-class Missile(_Sprite):
-    def __init__(self, _x, _y, _angle, _ship):
-        super().__init__(_x=_x, _y=_y)
+class Missile(_DynamicSprite):
+    """
+    A class representing a missile fired from a ship.
+
+    Inherits from _DynamicSprite.
+
+    Attributes:
+        _ship (Ship): The ship from which the missile is fired.
+        _seconds (float): The number of seconds the missile has existed.
+
+    Methods:
+        ship: Getter for the ship property.
+        update(*args, **kwargs): Updates the position and state of the missile.
+        on_screen_resize(): Handles the resizing of the missile sprite when the screen size changes.
+
+    """
+
+    def __init__(self, _x, _y, _angle, _ship: "Ship"):
+        """
+        Initializes a Missile object.
+
+        Args:
+            _x (int | float): The x-coordinate of the missile's starting position.
+            _y (int | float): The y-coordinate of the missile's starting position.
+            _angle (int | float): The angle at which the missile is fired.
+            _ship (Ship): The ship from which the missile is fired.
+        """
+
+        super().__init__(_img_path=f"server/images/missile.svg",
+                         _w_factor=2,
+                         _h_factor=2,
+                         _center=(_x, _y),
+                         _angle=_angle)
         self._ship = _ship
-        self._im = pygame.transform.scale(
-            _im := pygame.image.load(f"server/images/missile.svg"),
-            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
-             _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
-        )
-        self._imc = self._im
-        self._angle = _angle
+
         _speed = -300
         self._velocity = [_speed * math.sin(math.radians(_angle)) + _ship.velocity[0],
                           _speed * math.cos(math.radians(_angle)) + _ship.velocity[1]]
@@ -389,34 +477,87 @@ class Missile(_Sprite):
         self._seconds = 0
 
     @property
-    def ship(self):
+    def ship(self) -> "Ship":
+        """
+        Getter for the ship property.
+        """
         return self._ship
 
-    def update(self, *args, **kwargs):
+    def update(self, *args, **kwargs) -> Self:
+        """
+        Updates the position and state of the missile.
+
+        Returns:
+            Missile: The updated Missile object.
+        """
         super().update()
         self._seconds += 1 / GLOBALS.FPS
 
         if self._seconds > 2:
             self.kill()
 
+        return self
+
     def on_screen_resize(self):
-        self._on_screen_resize(_img=f"server/images/missile.svg", _wf=2, _hf=2)
+        """
+        Handles the resizing of the missile sprite when the screen size changes.
+        """
+        self._on_screen_resize()
 
 
 class Lasers(_Group):
+    """
+    A class representing a group of lasers.
+
+    Inherits from _Group.
+
+    Attributes:
+        lasers (list[Laser]): List of lasers in the group.
+
+    Methods:
+        lasers: Getter for the lasers property.
+        add(*_lasers): Adds lasers to the group.
+        newLaser(_ship: "Ship"): Creates a new laser fired from a ship and adds it to the group.
+
+    """
+
     def __init__(self, *_lasers):
+        """
+        Initializes a Lasers object.
+
+        Args:
+            *_lasers (Laser): Optional initial lasers to add to the group.
+        """
         super().__init__(_lasers)
 
     @property
-    def lasers(self) -> list:
+    def lasers(self) -> list[Laser]:
+        """
+        Getter for the lasers property.
+        """
         return self.sprites()
 
-    def add(self, *_lasers):
+    def add(self, *_lasers) -> None:
+        """
+        Adds lasers to the group.
+
+        Args:
+            *_lasers (Laser): Lasers to add to the group.
+        """
         for _laser in _lasers:
             if isinstance(_laser, Laser):
                 super().add(_laser)
 
-    def newLaser(self, _ship) -> Laser:
+    def newLaser(self, _ship: "Ship") -> Laser:
+        """
+        Creates a new laser fired from a ship and adds it to the group.
+
+        Args:
+            _ship (Ship): The ship from which the laser is fired.
+
+        Returns:
+            Laser: The newly created laser object.
+        """
         _x_off = 31 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if _ship.primary_chamber == "left" else 1)
         _y_off = 11 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
         _offset_theta = math.atan2(-_y_off, _x_off)
@@ -436,19 +577,57 @@ class Lasers(_Group):
 
 
 class Missiles(_Group):
+    """
+    A class representing a group of missiles.
+
+    Inherits from _Group.
+
+    Attributes:
+        missiles (list[Missile]): List of missiles in the group.
+
+    Methods:
+        missiles: Getter for the missiles property.
+        add(*_missiles): Adds missiles to the group.
+        newMissile(_ship): Creates a new missile fired from a ship and adds it to the group.
+    """
+
     def __init__(self, *_missiles):
+        """
+        Initializes a Missiles object.
+
+        Args:
+            *_missiles (Missile): Optional initial missiles to add to the group.
+        """
         super().__init__(_missiles)
 
     @property
-    def missiles(self) -> list:
+    def missiles(self) -> list[Missile]:
+        """
+        Getter for the missiles property.
+        """
         return self.sprites()
 
-    def add(self, *_missiles):
+    def add(self, *_missiles) -> None:
+        """
+        Adds missiles to the group.
+
+        Args:
+            *_missiles (Missile): Missiles to add to the group.
+        """
         for _missile in _missiles:
             if isinstance(_missile, Missile):
                 super().add(_missile)
 
     def newMissile(self, _ship) -> Missile:
+        """
+        Creates a new missile fired from a ship and adds it to the group.
+
+        Args:
+            _ship (Ship): The ship from which the missile is fired.
+
+        Returns:
+            Missile: The newly created missile object.
+        """
         _x_off = 36 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if _ship.secondary_chamber == "left" else 1)
         _y_off = -11 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
         _offset_theta = math.atan2(_y_off, _x_off)
@@ -466,16 +645,14 @@ class Missiles(_Group):
         return _missile
 
 
-class LaserHit(_Sprite):
+class LaserHit(_DynamicSprite):
     def __init__(self, _x, _y, _angle):
-        super().__init__(_x, _y)
-        self._im = pygame.transform.scale(
-            _im := pygame.image.load(f"server/images/laser_hit.svg").convert_alpha(),
-            (_im.get_width() * 2 * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
-             _im.get_height() * 2 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
-        )
-        self._imc = self._im
-        self._angle = _angle
+        super().__init__(_img_path=f"server/images/laser_hit.svg",
+                         _w_factor=2,
+                         _h_factor=2,
+                         _center=(_x, _y),
+                         _angle=_angle)
+
         self._timer = 0
         self._speed = -1
 
@@ -487,10 +664,10 @@ class LaserHit(_Sprite):
             self.kill()
 
     def on_screen_resize(self):
-        self._on_screen_resize(_img=f"server/images/laser_hit.svg", _wf=2, _hf=2)
+        self._on_screen_resize()
 
 
-class MissileHit(_Sprite):
+class MissileHit(_DynamicSprite):
     ...
 
 
@@ -504,17 +681,13 @@ class HitMarks(_Group):
                 super().add(_hit_mark)
 
 
-class AfterBurner(_Sprite):
+class AfterBurner(_StaticSprite):
     def __init__(self, _ship, _side):
-        super().__init__(_ship.x, _ship.y)
+        super().__init__(_img_path=f"server/images/after_burner.png",
+                         _center=_ship.center,
+                         _angle=_ship.angle)
 
-        self._im = pygame.transform.scale(
-            _im := pygame.image.load(f"server/images/after_burner.png"),
-            (_im.get_width() * GLOBALS.C_RATIO * GLOBALS.W_RATIO, _im.get_height() * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
-        )
-        self._imc = self._im
         self._side = _side
-        self._angle = _ship.angle
         self._stretch = 0
 
         self.__pos(_ship=_ship)
@@ -559,18 +732,12 @@ class AfterBurner(_Sprite):
 
 class Ship(_Sprite):
     def __init__(self, _x, _y, _player):
-        super().__init__(_x, _y)
+        super().__init__(_img_path="server/images/ship.svg", _center=(_x, _y))
         self._player = _player
-        self._im = pygame.transform.scale(
-            _im := pygame.image.load("server/images/ship.svg"),
-            (200 * GLOBALS.C_RATIO * GLOBALS.W_RATIO, 200 * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
-        )
-        self._imc = self._im
 
         self._mass = 1000
 
         self._flames = pygame.sprite.Group()
-
         self._flames.add(AfterBurner(_ship=self, _side="right"))
         self._flames.add(AfterBurner(_ship=self, _side="left"))
 
@@ -688,7 +855,7 @@ class Ship(_Sprite):
                     self._secondary_timing = True
 
     def on_screen_resize(self):
-        self._on_screen_resize(_img="server/images/ship.svg", _wf=1, _hf=1)
+        self._on_screen_resize()
 
     def __str__(self):
         return (f"Ship(\n"
@@ -810,8 +977,9 @@ def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
         try:
             _tc = _TSprite.center
             _a = \
-            _TSprite2.image.get_at((_TSprite.center[0] - _TSprite2.rect.left, _TSprite.center[1] - _TSprite2.rect.top))[
-                3]
+                _TSprite2.image.get_at(
+                    (_TSprite.center[0] - _TSprite2.rect.left, _TSprite.center[1] - _TSprite2.rect.top))[
+                    3]
             if _a:
                 _hm = LaserHit(_x=_tc[0], _y=_tc[1], _angle=_TSprite.angle)
                 GLOBALS.HIT_MARKS.add(_hm)
