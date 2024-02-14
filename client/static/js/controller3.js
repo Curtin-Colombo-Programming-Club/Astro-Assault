@@ -18,6 +18,9 @@ const button3 = document.getElementById("button-3");
 var joyx = 0, joyy = 0, joydx = 0, joydy = 0, movementInterval;
 var isJoystickPressed = false, joystickTouch = null;
 
+// initial func calls
+checkOrientation();
+
 // SOCK listners
 socket.on('kills', (data) => {
     console.log(data)
@@ -30,6 +33,8 @@ socket.on('deaths', (data) => {
 });
 
 // DOM listners
+window.addEventListener('resize', checkOrientation);
+
 joystickHandle.addEventListener('mousedown', handleJoystickPress);
 main.addEventListener('touchstart', (event) => {
     event.preventDefault();
@@ -87,6 +92,20 @@ document.addEventListener('touchend', (event) => {
 
 document.addEventListener('mousemove', handleJoystickMove);
 document.addEventListener('touchmove', handleJoystickMove);
+
+// functions
+function checkOrientation() {
+    if (window.innerWidth > window.innerHeight) {
+        console.log("Landscape orientation");
+        // Your code for landscape orientation
+        main.classList.remove("portrait")
+    } else {
+        console.log("Portrait orientation");
+        // Your code for portrait orientation
+        main.classList.add("portrait");
+        //main.style.left = `${(window.innerWidth - window.innerHeight) / 2}px`
+    }
+}
 
 function sendMovement() {
     console.log(joydy);

@@ -1,15 +1,28 @@
+body {
+}
+
 main {
+    position: absolute;
     background-color: black;
     /* background-image: url("/static/images/iPhone 14 & 15 Pro Max.png"); */
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     display: grid;
     grid-auto-flow: column;
     grid-template-columns: 30% auto 30%;
     grid-template-rows: 100%;
-    padding: 30px;
+    padding: 30px 67px;
     box-sizing: border-box;
     touch-action: manipulation;
+    transform: rotateZ(0);
+}
+
+main.portrait {
+    width: 100vh;
+    height: 100vw;
+    left: calc((100vw - 100vh) / 2);
+    top: calc((100vh - 100vw) / 2);
+    transform: rotateZ(90deg);
 }
 
 .joy-stick-wrapper {
@@ -19,21 +32,21 @@ main {
 }
 
 .joy-stick-container {
-    height: 45vh;
+    aspect-ratio: 1 / 1;
     width: 45vh;
     border-radius: 50%;
     border: 20px solid var(--color3);
     background-color: transparent;
     position: relative;
-    margin-bottom: 10px;
+    margin-bottom: 17%;
 }
 
 .joy-stick-thumb {
     position: absolute;
     left: 50%;
     top: 50%;
-    height: 60%;
-    width: 60%;
+    aspect-ratio: 1 / 1;
+    width: 55%;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     background-color: var(--color2);
