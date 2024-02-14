@@ -143,50 +143,10 @@ class _StaticSprite(pygame.sprite.Sprite):
 
 
 class _DynamicSprite(_StaticSprite):
-    def __init__(self, _img_path, _center, _w_factor=1, _h_factor=1, _angle=0):
-        super().__init__(_img_path=_img_path, _center=_center, _w_factor=_w_factor, _h_factor=_h_factor, _angle=_angle)
-        self._force = 0
-        self._angle = 0
-        self._d_angle = 0
-        self._mass = 0
-        self._acceleration = 0
-        self._velocity = [0, 0]
+    """
+    A class representing a dynamic sprite with custom properties and methods.
 
-    @property
-    def mass(self) -> int | float:
-        return self._mass
-
-    @property
-    def speed(self) -> int | float:
-        return math.sqrt(self._velocity[0] ** 2 + self._velocity[1] ** 2)
-
-    @property
-    def velocity(self) -> tuple:
-        return tuple(self._velocity)
-
-    def update(self, *args, **kwargs):
-        self._angle -= self._d_angle / _fps if (_fps := GLOBALS.FPS) > 0 else 1
-        if abs(self._angle) > 180:
-            self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
-
-        _time = 1 / GLOBALS.TICK_RATE
-
-        _add_speed = self._acceleration * _time
-
-        self._velocity[0] += _add_speed * math.sin(math.radians(self.angle))
-        self._velocity[1] += _add_speed * math.cos(math.radians(self.angle))
-
-        _x = self.x + self.velocity[0] * _time * GLOBALS.W_RATIO
-        _y = self.y + self.velocity[1] * _time * GLOBALS.H_RATIO
-
-        if _x < 0:
-            _x = GLOBALS.WIDTH
-        if _x > GLOBALS.WIDTH:
-            _x = 0
-        if _y < 0:
-            _y = GLOBALS.HEIGHT
-        if _y > GLOBALS.HEIGHT:
-            _y = 0
+    Inherits from _StaticSprite.
 
     Attributes:
         _force (int | float): The force applied to the sprite.
@@ -283,19 +243,15 @@ class _DynamicSprite(_StaticSprite):
         _t = 1 / GLOBALS.TICK_RATE
 
         # initial velocity
-        _u = self._velocity
-
-        _u_t_x = _u[0] * _t
-        _u_t_y = _u[1] * _t
+        _u = self.velocity
 
         # final velocity
         self._velocity[0] += self._acceleration * math.sin(math.radians(self.angle)) * _t
         self._velocity[1] += self._acceleration * math.cos(math.radians(self.angle)) * _t
+        _v = self.velocity
 
-        _s_x = self._velocity[0] * _t
-        _s_y = self._velocity[1] * _t
-
-        print(_s_x, _s_y, self.speed)
+        _s_x = 0.5 * (_u[0] + _v[0]) * _t
+        _s_y = 0.5 * (_u[1] + _v[1]) * _t
 
         # Update position
         _x = self.x + _s_x
@@ -721,16 +677,106 @@ class AfterBurner(_StaticSprite):
     def update(self, *args, **kwargs):
         _ship = kwargs["_ship"]
         self._angle = _ship.angle
-        _force = abs(_ship.force) if _ship.force <= 0 else 0
+        _force = abs(_ship.force.value) if _ship.force.value <= 0 else 0
         self._stretch = 3 * _force / GLOBALS.UNIT_FORCE
 
         self.__pos(_ship)
 
     def on_screen_resize(self):
-        self._on_screen_resize(_img=f"server/images/after_burner.png", _wf=1, _hf=1)
+        self._on_screen_resize()
 
 
-class Ship(_Sprite):
+class Force:
+    def __init__(self, _color, _name: str):
+        self.__name = _name
+        self.__start = [0, 0]
+        self.__value = 0
+        self.__angle = 0
+        self.__color = _color
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def start(self):
+        return self.__start
+
+    @start.setter
+    def start(self, _val):
+        if isinstance(_val, (tuple, list)) and len(_val) == 2:
+            self.__start = list(_val)
+        else:
+            raise ValueError
+
+    @property
+    def x(self):
+        return self.start[0]
+
+    @property
+    def y(self):
+        return self.start[1]
+
+    @property
+    def value(self):
+        return self.__value
+
+    @value.setter
+    def value(self, _val):
+        if isinstance(_val, (int, float)):
+            self.__value = _val
+        else:
+            raise ValueError
+
+    @property
+    def angle(self):
+        return self.__angle
+
+    @angle.setter
+    def angle(self, _val):
+        if isinstance(_val, (int, float)):
+            self.__angle = _val
+        else:
+            raise ValueError
+
+    @property
+    def color(self):
+        return self.__color
+
+    def update(self, _force):
+        self.__value = _force
+
+    def draw(self, _screen):
+        _length = - self.value * 0.0005
+
+        end_x = self.x + _length * math.sin(math.pi + math.radians(self.angle))
+        end_y = self.y + _length * math.cos(math.pi + math.radians(self.angle))
+        # Draw arrow body
+        pygame.draw.line(_screen, self.color, self.start, (end_x, end_y), 2)
+
+
+class Forces:
+    def __init__(self):
+        self.__fls: list[Force] = []
+
+    def add(self, _force_arrow: Force):
+        self.__fls.append(_force_arrow)
+
+        return self
+
+    def newForce(self, _color, _text: str):
+        _fa = Force(_color=_color, _name=_text)
+        self.add(_force_arrow=_fa)
+
+        return _fa
+
+    def updatex(self, *args, **kwargs):
+        _screen = kwargs["_screen"]
+        for _fa in self.__fls:
+            _fa.draw(_screen=_screen)
+
+
+class Ship(_DynamicSprite):
     def __init__(self, _x, _y, _player):
         super().__init__(_img_path="server/images/ship.svg", _center=(_x, _y))
         self._player = _player
@@ -753,6 +799,8 @@ class Ship(_Sprite):
 
         self._last_movement_update = 0
 
+        GLOBALS.FORCES.newForce(_color=(0, 0, 255), _text="Fe")
+
     @property
     def player(self):
         return self._player
@@ -774,15 +822,23 @@ class Ship(_Sprite):
         return self._dead
 
     def update(self, *args, **kwargs):
+        # args
         _screen = kwargs["_screen"]
+
+        # updating force object
+        self.force.angle = self.angle
+        self.force.start = self.center
 
         pygame.draw.rect(_screen, (0, 0, 255), self.rect, 2)
         _username = pygame.transform.scale(
             _im := pygame.font.Font(None, 40).render(self.player.username, True, (255, 255, 255)),
             (_im.get_width() * GLOBALS.W_RATIO * GLOBALS.C_RATIO, _im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO))
         _screen.blit(_username, (
-        self.x - _username.get_width() / 2, self.rect.top - _username.get_height() - 10 * GLOBALS.H_RATIO))
+            self.x - _username.get_width() / 2, self.rect.top - _username.get_height() - 10 * GLOBALS.H_RATIO))
+
+        # super update
         super().update()
+
         self._flames.update(_ship=self)
         self._flames.draw(_screen)
         # timers
@@ -825,9 +881,9 @@ class Ship(_Sprite):
         """
         _unit_force = GLOBALS.UNIT_FORCE
         _force_factor = _dy if _dy <= 0 else _dy / 2
-        self._force = _unit_force * _force_factor
+        self._force.value = _unit_force * _force_factor
 
-        self._acceleration = self._force / self.mass
+        self._acceleration = self._force.value / self.mass
         # -----
 
         # speed constrains
