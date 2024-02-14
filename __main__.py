@@ -18,6 +18,7 @@ GLOBALS.SHIPS = Ships()
 GLOBALS.LASERS = Lasers()
 GLOBALS.MISSILES = Missiles()
 GLOBALS.HIT_MARKS = HitMarks()
+GLOBALS.FORCES = Forces()
 GLOBALS.GAMERUNNING = False
 
 
@@ -103,6 +104,9 @@ def Game():
         GLOBALS.SHIPS.updatex(_screen=screen)
 
         GLOBALS.HIT_MARKS.updatex(_screen=screen)
+
+        if GLOBALS.DRAW_FORCES:
+            GLOBALS.FORCES.updatex(_screen=screen)
 
         # Check for collisions between the two groups
         collisions1 = pygame.sprite.groupcollide(GLOBALS.MISSILES, GLOBALS.LASERS, True, True)
