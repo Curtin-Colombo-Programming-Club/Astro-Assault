@@ -26,3 +26,5 @@ LASERS: Lasers | None = None
 MISSILES: Missiles | None = None
 HIT_MARKS: HitMarks | None = None
 SHIP_MASKS = None
+FORCES: Forces | None = None
+DRAW_FORCES: bool = True
