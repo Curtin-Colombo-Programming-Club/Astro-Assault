@@ -759,14 +759,14 @@ class Forces:
     def __init__(self):
         self.__fls: list[Force] = []
 
-    def add(self, _force_arrow: Force):
-        self.__fls.append(_force_arrow)
+    def add(self, _force: Force):
+        self.__fls.append(_force)
 
         return self
 
     def newForce(self, _color, _text: str):
         _fa = Force(_color=_color, _name=_text)
-        self.add(_force_arrow=_fa)
+        self.add(_force=_fa)
 
         return _fa
 
