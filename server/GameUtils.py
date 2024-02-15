@@ -176,8 +176,9 @@ class _DynamicSprite(_StaticSprite):
         """
         super().__init__(_img_path=_img_path, _center=_center, _w_factor=_w_factor, _h_factor=_h_factor, _angle=_angle)
         self._force = GLOBALS.FORCES.newForce(_color=(0, 0, 255), _text="Fe")
+        self._drag_force = GLOBALS.FORCES.newForce(_color=(255, 0, 0), _text="Fd")
         self._d_angle = 0
-        self._mass = 0
+        self._mass = 1
         self._acceleration = 0
         self._velocity = [0, 0]
 
@@ -238,16 +239,46 @@ class _DynamicSprite(_StaticSprite):
         Since updates are called at each computing elapsed time period (1/tick-rate)
         We break the velocity and time planes into segments and find the area in it
         ∴ s = 0.5 (u + v) . t  ←  trapezium rule
+        
+        Drag Force
+        ----------
+        Fd = 0.5 ⋅ ρ ⋅ A ⋅ v^2 . Cd 
+        
+        Resultant Force
+        --------------
+        Fr = Fe + Fd
+        
+        Acceleration
+        ------------
+        ∴ acceleration = Fr / mass  
         """
 
+        # Drag Force
+        self._drag_force.value = 0.5 * GLOBALS.DENSITY * 1 * (self.speed ** 2) * GLOBALS.DRAG_FACTOR
+        self._drag_force.start = self.center
+        self._drag_force.angle = math.degrees(math.atan2(-self.velocity[0], -self.velocity[1]))
+        print("@update", self._drag_force.angle,self._drag_force.value, self._force.value, self.speed)
+
+        # Resultant Force
+        _Rx = self._force.value * math.sin(math.radians(self.force.angle)) + self._drag_force.value * math.sin(math.radians(self._drag_force.angle))
+        _Ry = self._force.value * math.cos(math.radians(self.force.angle)) + self._drag_force.value * math.cos(math.radians(self._drag_force.angle))
+        _Fr = math.sqrt(_Rx**2 + _Ry**2)
+
+        # Resultant Angle
+        _angle = math.atan2(_Rx, _Ry)
+
+        # Acceleration
+        self._acceleration = _Fr / self.mass
+
+        # time
         _t = 1 / GLOBALS.TICK_RATE
 
         # initial velocity
         _u = self.velocity
 
         # final velocity
-        self._velocity[0] += self._acceleration * math.sin(math.radians(self.angle)) * _t
-        self._velocity[1] += self._acceleration * math.cos(math.radians(self.angle)) * _t
+        self._velocity[0] += self._acceleration * math.sin(_angle) * _t
+        self._velocity[1] += self._acceleration * math.cos(_angle) * _t
         _v = self.velocity
 
         _s_x = 0.5 * (_u[0] + _v[0]) * _t
@@ -874,15 +905,11 @@ class Ship(_DynamicSprite):
         acceleration calculation
         =================
         F = uf . f%
-        F = m . a  →  a = F / m
-        
-        ∴ acceleration = (unit force . force factor) / mass    
+        F = m . a  →  a = F / m  
         """
         _unit_force = GLOBALS.UNIT_FORCE
         _force_factor = _dy if _dy <= 0 else _dy / 2
         self._force.value = _unit_force * _force_factor
-
-        self._acceleration = self._force.value / self.mass
         # -----
 
         # speed constrains
