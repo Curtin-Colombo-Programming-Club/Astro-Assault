@@ -1,7 +1,6 @@
 import sys
 import time
 from time import sleep
-
 import pygame.display
 import pygame.display
 from flask import Flask
@@ -86,6 +85,8 @@ def Game():
                     GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
                     on_screen_resize()
                     print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
+                if event.key == pygame.K_f and pygame.key.get_mods() & (pygame.KMOD_LSHIFT or pygame.KMOD_RSHIFT):
+                    GLOBALS.DRAW_FORCES = not GLOBALS.DRAW_FORCES
 
         current_tick_time = pygame.time.get_ticks()
         elapsed_time = current_tick_time - last_tick_time

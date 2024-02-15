@@ -258,7 +258,7 @@ class _DynamicSprite(_StaticSprite):
         self._drag_force.value = 0.5 * GLOBALS.DENSITY * self._area * (self.speed ** 2) * GLOBALS.DRAG_FACTOR
         self._drag_force.start = self.center
         self._drag_force.angle = math.degrees(math.atan2(-self.velocity[0], -self.velocity[1]))
-        print("@update", self._drag_force.angle,self._drag_force.value, self._force.value, self.speed)
+        # print("@update", self._drag_force.angle,self._drag_force.value, self._force.value, self.speed)
 
         # Resultant Force
         _Rx = self._force.value * math.sin(math.radians(self.force.angle)) + self._drag_force.value * math.sin(math.radians(self._drag_force.angle))
@@ -391,6 +391,8 @@ class Laser(_DynamicSprite):
                          _h_factor=3)
         self._ship = _ship
         self._index = _index
+
+        self._area = 0.001
 
         _speed = -1000
         self._velocity = [_speed * math.sin(math.radians(_angle)) + _ship.velocity[0],
@@ -694,7 +696,7 @@ class AfterBurner(_StaticSprite):
 
     def __pos(self, _ship):
         _x_off = 56 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if self._side == "left" else 1)
-        _y_off = 82 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
+        _y_off = 83 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
         _offset_theta = math.atan2(_y_off, _x_off)
         _r = math.sqrt(_x_off ** 2 + _y_off ** 2)
         _ship_angle = -_ship.angle
@@ -817,12 +819,18 @@ class Forces:
 
 
 class Ship(_DynamicSprite):
-    def __init__(self, _x, _y, _player):
+    def __init__(self, _x, _y, _player, _color=(0, 0, 255)):
         super().__init__(_img_path="server/images/ship.svg", _center=(_x, _y))
+
+        self.__color = _color
+
+        # setting player color on ship
+        self.__set_player_color()
+
         self._player = _player
 
         self._mass = 1000
-        self._area = 1
+        self._area = 250000
 
         self._flames = pygame.sprite.Group()
         self._flames.add(AfterBurner(_ship=self, _side="right"))
@@ -841,6 +849,19 @@ class Ship(_DynamicSprite):
         self._last_movement_update = 0
 
         GLOBALS.FORCES.newForce(_color=(0, 0, 255), _text="Fe")
+
+    def __set_player_color(self):
+        _player_color_mask = pygame.transform.scale(
+            pygame.image.load("server/images/player_color_mask.svg"),
+            (
+                _width := self._im.get_width(),
+                _height := self._im.get_width())
+        )
+        for x in range(_width):
+            for y in range(_height):
+                if _p_c_m_a := _player_color_mask.get_at((x, y))[3] / 255:
+                    self._im.set_at((x, y), (self.__color[0] * _p_c_m_a, self.__color[1] * _p_c_m_a, self.__color[2] * _p_c_m_a, 255))
+        self._imc = self._im
 
     @property
     def player(self):
@@ -948,6 +969,7 @@ class Ship(_DynamicSprite):
 
     def on_screen_resize(self):
         self._on_screen_resize()
+        self.__set_player_color()
 
     def __str__(self):
         return (f"Ship(\n"
