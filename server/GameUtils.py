@@ -177,6 +177,7 @@ class _DynamicSprite(_StaticSprite):
         super().__init__(_img_path=_img_path, _center=_center, _w_factor=_w_factor, _h_factor=_h_factor, _angle=_angle)
         self._force = GLOBALS.FORCES.newForce(_color=(0, 0, 255), _text="Fe")
         self._drag_force = GLOBALS.FORCES.newForce(_color=(255, 0, 0), _text="Fd")
+        self._area = 0.001
         self._d_angle = 0
         self._mass = 1
         self._acceleration = 0
@@ -254,7 +255,7 @@ class _DynamicSprite(_StaticSprite):
         """
 
         # Drag Force
-        self._drag_force.value = 0.5 * GLOBALS.DENSITY * 1 * (self.speed ** 2) * GLOBALS.DRAG_FACTOR
+        self._drag_force.value = 0.5 * GLOBALS.DENSITY * self._area * (self.speed ** 2) * GLOBALS.DRAG_FACTOR
         self._drag_force.start = self.center
         self._drag_force.angle = math.degrees(math.atan2(-self.velocity[0], -self.velocity[1]))
         print("@update", self._drag_force.angle,self._drag_force.value, self._force.value, self.speed)
@@ -460,7 +461,8 @@ class Missile(_DynamicSprite):
         _speed = -300
         self._velocity = [_speed * math.sin(math.radians(_angle)) + _ship.velocity[0],
                           _speed * math.cos(math.radians(_angle)) + _ship.velocity[1]]
-        self._acceleration = -600
+        self._force.value = -1000
+        self._force.angle = _angle
         self._seconds = 0
 
     @property
@@ -724,6 +726,7 @@ class Force:
         self.__value = 0
         self.__angle = 0
         self.__color = _color
+        self.__draw = True
 
     @property
     def name(self):
@@ -737,6 +740,7 @@ class Force:
     def start(self, _val):
         if isinstance(_val, (tuple, list)) and len(_val) == 2:
             self.__start = list(_val)
+            self.__draw = True
         else:
             raise ValueError
 
@@ -756,6 +760,7 @@ class Force:
     def value(self, _val):
         if isinstance(_val, (int, float)):
             self.__value = _val
+            self.__draw = True
         else:
             raise ValueError
 
@@ -767,6 +772,7 @@ class Force:
     def angle(self, _val):
         if isinstance(_val, (int, float)):
             self.__angle = _val
+            self.__draw = True
         else:
             raise ValueError
 
@@ -774,16 +780,19 @@ class Force:
     def color(self):
         return self.__color
 
-    def update(self, _force):
-        self.__value = _force
+    def update(self, _val):
+        self.__value = _val
 
     def draw(self, _screen):
-        _length = - self.value * 0.0005
+        if self.__draw:
+            _length = - self.value * 0.0005
 
-        end_x = self.x + _length * math.sin(math.pi + math.radians(self.angle))
-        end_y = self.y + _length * math.cos(math.pi + math.radians(self.angle))
-        # Draw arrow body
-        pygame.draw.line(_screen, self.color, self.start, (end_x, end_y), 2)
+            end_x = self.x + _length * math.sin(math.pi + math.radians(self.angle))
+            end_y = self.y + _length * math.cos(math.pi + math.radians(self.angle))
+            # Draw arrow body
+            pygame.draw.line(_screen, self.color, self.start, (end_x, end_y), 2)
+
+            self.__draw = False
 
 
 class Forces:
@@ -813,6 +822,7 @@ class Ship(_DynamicSprite):
         self._player = _player
 
         self._mass = 1000
+        self._area = 1
 
         self._flames = pygame.sprite.Group()
         self._flames.add(AfterBurner(_ship=self, _side="right"))
