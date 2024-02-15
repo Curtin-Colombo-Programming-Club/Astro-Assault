@@ -829,7 +829,6 @@ class Ship(_DynamicSprite):
         self.force.angle = self.angle
         self.force.start = self.center
 
-        pygame.draw.rect(_screen, (0, 0, 255), self.rect, 2)
         _username = pygame.transform.scale(
             _im := pygame.font.Font(None, 40).render(self.player.username, True, (255, 255, 255)),
             (_im.get_width() * GLOBALS.W_RATIO * GLOBALS.C_RATIO, _im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO))
