@@ -1,3 +1,8 @@
+// vars
+var joyx = 0, joyy = 0, joydx = 0, joydy = 0, movementInterval;
+var isJoystickPressed = false, joystickTouch = null;
+
+// DOM elements
 const main = document.getElementById("main");
 
 const kills = document.getElementById("rectangle-button-1");
@@ -14,9 +19,6 @@ const fullscreen_btn = document.getElementById("middle-button-3");
 const button1 = document.getElementById("button-1");
 const button2 = document.getElementById("button-2");
 const button3 = document.getElementById("button-3");
-
-var joyx = 0, joyy = 0, joydx = 0, joydy = 0, movementInterval;
-var isJoystickPressed = false, joystickTouch = null;
 
 // initial func calls
 checkOrientation();
