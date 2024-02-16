@@ -7,6 +7,8 @@
     --bad: rgb(148, 0, 0);
     --baad: red;
     --white: #ffffff;
+    --startP-start: red;
+    --startP-end: blue;
 }
 
 * {
