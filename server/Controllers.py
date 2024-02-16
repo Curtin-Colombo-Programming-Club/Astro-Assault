@@ -1,9 +1,10 @@
 import datetime
+import json
 import uuid
 from typing import Dict
 from server.GameUtils import *
 from flask_socketio import SocketIO, join_room, emit
-from flask import Flask, render_template, request, make_response, url_for, send_file
+from flask import Flask, render_template, request, make_response, url_for, send_file, redirect, jsonify
 from server.GameUtils import *
 from server import GLOBALS
 import qrcode
@@ -25,16 +26,16 @@ class SocketController:
             _token = request.args.get('token')
             _player = self.__players[_token]
 
-            print(f"Existing player;\n{_player}" if _player else "Creating new Player")
+            print(f"SOCK connection Established;\n{_player}")
 
-            if _player is None:
+            """if _player is None:
                 uuid1 = uuid.uuid1()
                 uuid4 = str(uuid.uuid4()).replace("-", "")
                 uuid3 = str(uuid.uuid3(uuid1, client_address)).replace("-", "")
                 _player = self.__players.newPlayer(f"{uuid4}.{uuid3}")
                 _token = _player.token
 
-                print(f"New player;\n{_player}")
+                print(f"New player;\n{_player}")"""
 
             _player.connect()
             print(f"player online;\n{_player}")
@@ -127,29 +128,47 @@ class HTTPController:
         self.__players = GLOBALS.PLAYERS
 
     def control(self):
-        @self.__app.route("/", methods=["GET"])
+        @self.__app.route("/", methods=["GET", "POST"])
         def start():
-            return render_template("start.html")
+            if request.method == "GET":
+                _token = request.cookies.get('auth_token', None)
+                _player = self.__players[_token]
+                if _player:
+                    return render_template("controller3.html")
+                else:
+                    return render_template("start.html")
+            elif request.method == "POST":
+                _username = request.form.get("username", "no-name")
+                _color = tuple(json.loads(request.form.get("color", "[255, 255, 255]")))
+                uuid1 = uuid.uuid1()
+                uuid4 = str(uuid.uuid4()).replace("-", "")
+                uuid3 = str(uuid.uuid3(uuid1, request.remote_addr)).replace("-", "")
+                _token = f"{uuid4}.{uuid3}"
+                print(request.form)
+                _player = self.__players.newPlayer(
+                    _token=_token,
+                    _username=_username,
+                    _color=_color
+                )
+
+                _expiration_time = datetime.datetime.now() + datetime.timedelta(days=1)
+                response = make_response(jsonify({'auth_token': _token, 'username': _username}))
+                response.set_cookie(key='auth_token', value=_token, path="/", expires=_expiration_time)
+                response.set_cookie(key='username', value=_username, path="/", expires=_expiration_time)
+                response.set_cookie(key='login_status', value='true', path="/", expires=_expiration_time)
+                response.status = 200
+
+                return response
 
         @self.__app.route("/controller", methods=["GET"])
         def controller():
-            print(request.cookies.get('auth_token'))
-            return render_template("controller.html")
+            _token = request.cookies.get('auth_token', None)
+            _player = self.__players[_token]
 
-        @self.__app.route("/controller2", methods=["GET"])
-        def controller2():
-            print(request.cookies.get('auth_token'))
-            return render_template("controller2.html")
-
-        @self.__app.route("/controller3", methods=["GET"])
-        def controller3():
-            print(request.cookies.get('auth_token'))
-            return render_template("controller3.html")
-
-        @self.__app.route("/test", methods=["GET"])
-        def test():
-            print(request.cookies.get('auth_token'), "/test")
-            return render_template("test2.html")
+            if _player:
+                return render_template("controller3.html")
+            else:
+                return redirect("/")
 
         @self.__app.route("/<path>.qr", methods=["GET"])
         def qr(path):

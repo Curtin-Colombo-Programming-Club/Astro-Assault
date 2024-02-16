@@ -1,15 +1,5 @@
 //vars
-var TOKEN = localStorage.token;
-
-if ((TOKEN === null || TOKEN == undefined) && window.location.pathname != "/") {
-    console.log(window.location.href, "/")
-    window.location.href = "/";
-}
-else if (!(TOKEN === null || TOKEN == undefined) && window.location.pathname != "/controller3") {
-    console.log(window.location.href, "/controller3", !(TOKEN === null || TOKEN == undefined))
-    window.location.href = "/controller3";
-}
-
+var TOKEN = localStorage.auth_token;
 
 // Construct the full URL
 const sockUrl = `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`;

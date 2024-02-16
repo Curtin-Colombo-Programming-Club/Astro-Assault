@@ -991,23 +991,23 @@ class Ships(_Group):
             if isinstance(_ships, Ship):
                 super().add(_ship)
 
-    def newShip(self, _player) -> Ship:
+    def newShip(self, _player, _color) -> Ship:
         # _ship = Ship(_player=_player, _x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT))
-        _ship = Ship(_player=_player, _x=400, _y=0)
+        _ship = Ship(_player=_player, _x=400, _y=0, _color=_color)
         self.add(_ship)
 
         return _ship
 
 
 class Player:
-    def __init__(self, _token: str):
+    def __init__(self, _token: str, _username: str, _color: tuple):
         self.__online = False
         self.__lastOnline = datetime.datetime.now()
 
         self.__token = _token
-        self.__username = "user-name"
+        self.__username = _username
 
-        self.__ship: Ship = GLOBALS.SHIPS.newShip(_player=self)
+        self.__ship: Ship = GLOBALS.SHIPS.newShip(_player=self, _color=_color)
         self.__kills = 0
         self.__deaths = 0
 
@@ -1076,8 +1076,8 @@ class Players:
                 self.players[_player.token] = _player
                 # _player.ship.add(GLOBALS.SHIPS)
 
-    def newPlayer(self, _token: str) -> Player:
-        _player = Player(_token)
+    def newPlayer(self, _token: str, _username: str, _color: tuple) -> Player:
+        _player = Player(_token=_token, _username=_username, _color=_color)
         self.add(_player)
 
         return _player
