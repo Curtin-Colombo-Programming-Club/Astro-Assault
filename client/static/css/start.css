@@ -73,6 +73,10 @@ body {
     animation: bgt 3s infinite alternate;
 }
 
+.input-field:not(:focus):not(:placeholder-shown) ~ .input-label {
+    display: none;
+}
+
 @keyframes bgt {
     from {
         background-position: left;

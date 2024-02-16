@@ -48,6 +48,9 @@ def Game():
     screen = pygame.display.set_mode((GLOBALS.WIDTH, GLOBALS.HEIGHT), pygame.DOUBLEBUF | pygame.SCALED | pygame.HWSURFACE | pygame.HWACCEL)
     pygame.display.set_caption("Astro Assault")
 
+    # Set the icon
+    pygame.display.set_icon(pygame.image.load("server/images/icon.png"))
+
     # Set up colors
     white = (255, 255, 255)
     black = (0, 0, 0)
