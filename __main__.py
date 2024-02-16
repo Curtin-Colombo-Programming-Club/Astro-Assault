@@ -45,7 +45,7 @@ def Game():
         return -1
 
     GLOBALS.GAMERUNNING = True
-    screen = pygame.display.set_mode((GLOBALS.WIDTH, GLOBALS.HEIGHT))
+    screen = pygame.display.set_mode((GLOBALS.WIDTH, GLOBALS.HEIGHT), pygame.DOUBLEBUF | pygame.SCALED | pygame.HWSURFACE | pygame.HWACCEL)
     pygame.display.set_caption("Astro Assault")
 
     # Set up colors
@@ -57,8 +57,6 @@ def Game():
     GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
     GLOBALS.W_RATIO = GLOBALS.WIDTH / 1920
     print(GLOBALS.WIDTH, GLOBALS.HEIGHT)
-
-    print("screen", hasattr(screen, "blits"))
 
     # Set up font
     font = pygame.font.Font(None, 45)  # You can choose your own font and size
@@ -78,7 +76,7 @@ def Game():
                     GLOBALS.FULLSCREEN = not GLOBALS.FULLSCREEN
                     GLOBALS.p_H_RATIO = GLOBALS.H_RATIO
                     GLOBALS.p_W_RATIO = GLOBALS.W_RATIO
-                    screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN) if GLOBALS.FULLSCREEN else pygame.display.set_mode((1280, 720))
+                    screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN | pygame.DOUBLEBUF | pygame.SCALED | pygame.HWSURFACE | pygame.HWACCEL) if GLOBALS.FULLSCREEN else pygame.display.set_mode((1280, 720), pygame.DOUBLEBUF | pygame.SCALED | pygame.HWSURFACE | pygame.HWACCEL)
                     GLOBALS.WIDTH = screen.get_width()
                     GLOBALS.HEIGHT = screen.get_height()
                     GLOBALS.H_RATIO = GLOBALS.HEIGHT / 1080
