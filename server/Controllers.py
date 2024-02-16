@@ -127,6 +127,10 @@ class HTTPController:
         self.__players = GLOBALS.PLAYERS
 
     def control(self):
+        @self.__app.route("/", methods=["GET"])
+        def start():
+            return render_template("start.html")
+
         @self.__app.route("/controller", methods=["GET"])
         def controller():
             print(request.cookies.get('auth_token'))
