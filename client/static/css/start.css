@@ -9,16 +9,17 @@ body {
     min-height: 100vh;
     position: relative;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: #292929;
+    background: #000000;
     font-family: 'Open Sans', sans-serif;
 }
 
 .field-group {
-    width: 600px;
+    width: 70%;
+    min-width: 350px;
     position: relative;
-    padding-top: 15px;
 }
 
 .input-field {
@@ -65,7 +66,7 @@ body {
     top: 0;
     font-size: 1em;
     background: linear-gradient(to right, red, blue, red, blue);
-    background-size: 250% 100%;
+    background-size: 300% 100%;
     background-position: left;
     color: transparent;
     background-clip: text;
@@ -81,13 +82,44 @@ body {
     }
 }
 
+.color-picker {
+    width: 70%;
+    min-width: 350px;
+    padding: 60px 0px;
+}
+
 .hue-slider {
     width: 100%;
     height: 15px;
-    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+    background: linear-gradient(to right, red, yellow, rgb(0, 255, 0), blue, rgb(255, 0, 255), red);
     border-radius: 5px;
-    cursor: pointer;
+    cursor: default;
+    position: relative;
+}
+
+.hue-thumb {
     position: absolute;
-    top: 100px;
-    right: 0px;
+    aspect-ratio: 1/1;
+    height: 160%;
+    background-color: white;
+    border-radius: 50%;
+    border: solid rgb(61, 0, 0);
+    border-width: 5px;
+    left: 0;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    transition: height 0.3s, border 0.3s;
+    box-sizing: content-box;
+}
+
+.hue-thumb:hover {
+    height: 200%;
+    border-width: 10px;
+}
+
+.button {
+    width: 100px;
+    height: 50px;
+    background-color: aqua;
 }

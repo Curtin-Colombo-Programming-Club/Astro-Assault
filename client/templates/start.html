@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,12 +10,21 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
   <script src="/static/js/sock.js"></script>
 </head>
+
 <body>
-<div class="field-group">
-    <input type="text" name="name" id="name" class="input-field" placeholder="Enter Name"  autocomplete="off">
+  <div class="field-group">
+    <input type="text" name="name" id="name" class="input-field" placeholder="Enter Name" autocomplete="off">
     <label for="name" class="input-label"> Enter Name</label>
-    <div class="color-picker">
-    <div class="hue-slider"></div>
-</div>
+  </div>
+  <div class="color-picker">
+    <div class="hue-slider">
+      <div class="hue-thumb"></div>
+    </div>
+  </div>
+  <div class="button-container">
+    <div class="button"></div>
+  </div>
+  <script src="/static/js/start.js"></script>
 </body>
+
 </html>
