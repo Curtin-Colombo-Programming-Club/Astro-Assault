@@ -1,10 +1,20 @@
+//vars
+var TOKEN = localStorage.token;
+
+if ((TOKEN === null || TOKEN == undefined) && window.location.pathname != "/") {
+    window.location.href = "/";
+}
+else if (!(TOKEN === null || TOKEN == undefined) && window.location.pathname != "controller3") {
+    window.location.href = "/controller3";
+}
+
 
 // Construct the full URL
 const sockUrl = `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`;
 
 const socket = io(sockUrl, {
     query: {
-        token: localStorage.token  // Pass your authentication token here
+        token: TOKEN  // sending auth token
     }
 });
 
