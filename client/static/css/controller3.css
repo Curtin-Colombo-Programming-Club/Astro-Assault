@@ -1,4 +1,41 @@
-body {
+.overlay-container {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    z-index: 500;
+    background-color: rgba(0, 0, 0, 0.638);
+    backdrop-filter: blur(10px);
+}
+
+.overlay-container.x {
+    display: none;
+    visibility: hidden;
+    z-index: -1;
+}
+
+.overlay {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    color: white;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.overlay img {
+    aspect-ratio: 1 / 1;
+    width: 40%;
+    z-index: 2000;
+}
+
+.overlay span {
+    padding-top: 20px;
+    font-size: 20px;
+    font-weight: 900;
+    z-index: 2000;
 }
 
 main {
@@ -120,21 +157,21 @@ main.portrait {
     align-items: center;
     justify-content: space-between;
     height: 100%;
-    
+
 }
 
 .mother-rectangle {
     display: flex;
     flex-direction: column;
     align-items: center;
-    border: 5px solid var(--white); 
-    padding: 10px; 
+    border: 5px solid var(--white);
+    padding: 10px;
     border-radius: 10px;
 }
 
 .score-text {
-    font-size: 20px; 
-    color: var(--white); 
+    font-size: 20px;
+    color: var(--white);
     margin-top: -5px;
 }
 
@@ -143,26 +180,28 @@ main.portrait {
 }
 
 .rectangle-button {
-    width: 80px; 
-    height: 40px; 
+    width: 80px;
+    height: 40px;
     background-color: var(--color2);
-    border: 1px solid var(--white); 
+    border: 1px solid var(--white);
     border-radius: 10px;
-    margin: 0 15px; 
+    margin: 0 15px;
 }
 
 .button-text-1 {
     color: white;
-    font-size: 16px; /* Adjust the font size as needed */
+    font-size: 16px;
+    /* Adjust the font size as needed */
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100%;
 }
 
-.button-text-2{
+.button-text-2 {
     color: red;
-    font-size: 16px; /* Adjust the font size as needed */
+    font-size: 16px;
+    /* Adjust the font size as needed */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -179,7 +218,7 @@ main.portrait {
     margin-bottom: 15px;
 }
 
-#middle-button-1{
+#middle-button-1 {
     top: 20%;
     background-image: url(/static/images/settings.png);
     background-position: center;
@@ -187,7 +226,7 @@ main.portrait {
     background-repeat: no-repeat;
 }
 
-#middle-button-2{
+#middle-button-2 {
     top: 20%;
     background-image: url(/static/images/refresh.png);
     background-position: center;
@@ -195,7 +234,7 @@ main.portrait {
     background-repeat: no-repeat;
 }
 
-#middle-button-3{
+#middle-button-3 {
     top: 20%;
     background-image: url(/static/images/fullscreen.png);
     background-position: center;
@@ -209,5 +248,5 @@ main.portrait {
     border-radius: 50%;
     aspect-ratio: 1 / 1;
     width: 60px;
-   
+
 }

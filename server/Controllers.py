@@ -123,8 +123,8 @@ class SocketController:
 class HTTPController:
     def __init__(self, app: Flask):
         self.__app = app
-        self.__app.template_folder = "client/templates"
-        self.__app.static_folder = "client/static"
+        self.__app.template_folder = "../Client/templates"
+        self.__app.static_folder = "../Client/static"
         self.__players = GLOBALS.PLAYERS
 
     def control(self):

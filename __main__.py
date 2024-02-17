@@ -12,20 +12,21 @@ from Server.Utils import *
 from Server.Controllers import *
 import threading
 import pygame.surface
+import sys
 
 
-Server.init()
-Game.init()
+def main(*args, **kwargs):
+    Server.init()
+    Game.init()
 
-# controls
-GLOBALS.SOCK = SocketController(socketio)
-GLOBALS.SOCK.control()
-HTTPController(app).control()
+    GameThread = threading.Thread(target=Game.run)
+    GameThread.daemon = True
+    GameThread.start()
 
-GameThread = threading.Thread(target=Game.run)
-GameThread.daemon = True
-GameThread.start()
+    sleep(2)
+    Server.start()
 
-sleep(2)
 
-socketio.run(app, host="0.0.0.0", allow_unsafe_werkzeug=True)
+if __name__ == "__main__":
+    main(sys.argv)
+

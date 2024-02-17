@@ -99,10 +99,12 @@ document.addEventListener('touchmove', handleJoystickMove);
 function checkOrientation() {
     if (window.innerWidth > window.innerHeight) {
         console.log("Landscape orientation");
+        document.querySelector(".overlay-container").classList.add('x');
         // Your code for landscape orientation
         main.classList.remove("portrait")
     } else {
         console.log("Portrait orientation");
+        document.querySelector(".overlay-container").classList.remove('x');
         // Your code for portrait orientation
         main.classList.add("portrait");
         //main.style.left = `${(window.innerWidth - window.innerHeight) / 2}px`

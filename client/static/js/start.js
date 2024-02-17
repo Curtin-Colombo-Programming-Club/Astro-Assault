@@ -2,12 +2,24 @@
 const username = document.getElementById("username");
 const hueThumb = document.querySelector(".hue-thumb");
 const hueSlider = document.querySelector(".hue-slider");
+const start = document.getElementById("start");
 
 // vars
 var rgb = [255, 0, 0];
 
 // Flag to track if the thumb is being dragged
 let isDragging = false;
+
+// Add touch event listeners for touch interactions
+hueThumb.addEventListener("touchstart", handleTouchStart);
+document.addEventListener("touchmove", handleTouchMove);
+document.addEventListener("touchend", handleTouchEnd);
+// Add mouse event listeners for mouse interactions
+hueThumb.addEventListener("mousedown", handleMouseDown);
+document.addEventListener("mousemove", handleMouseMove);
+document.addEventListener("mouseup", handleMouseUp);
+//
+start.addEventListener("click", sendData);
 
 // Function to handle mouse down event on the thumb
 function handleMouseDown(event) {
@@ -32,10 +44,6 @@ function handleMouseUp(event) {
     }
 }
 
-// Add mouse event listeners for mouse interactions
-hueThumb.addEventListener("mousedown", handleMouseDown);
-document.addEventListener("mousemove", handleMouseMove);
-document.addEventListener("mouseup", handleMouseUp);
 
 // Function to handle touch start event on the thumb
 function handleTouchStart(event) {
@@ -46,6 +54,7 @@ function handleTouchStart(event) {
 // Function to handle touch move event while dragging the thumb
 function handleTouchMove(event) {
     if (isDragging) {
+        event.preventDefault();
         const touch = event.touches[0];
         const newPosition = touch.clientX - hueSlider.getBoundingClientRect().left;
         const maxPosition = hueSlider.offsetWidth;
@@ -107,11 +116,6 @@ function handleTouchEnd(event) {
         //sendData(username.value, getColorFromPosition());
     }
 }
-
-// Add touch event listeners for touch interactions
-hueThumb.addEventListener("touchstart", handleTouchStart);
-document.addEventListener("touchmove", handleTouchMove);
-document.addEventListener("touchend", handleTouchEnd);
 
 // Function to calculate color based on the position of the hue thumb
 function getColorFromPosition() {

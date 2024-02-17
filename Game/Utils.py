@@ -1,3 +1,5 @@
+import os
+
 import GLOBALS
 import math
 import pygame
@@ -344,9 +346,6 @@ class _Group(pygame.sprite.Group):
         """
         Call the on_screen_resize method for all sprites in the group.
 
-        Parameters:
-            None
-
         Returns:
             None
         """
@@ -638,7 +637,7 @@ class Missiles(_Group):
 
 class LaserHit(_DynamicSprite):
     def __init__(self, _x, _y, _angle):
-        super().__init__(_img_path=f"Game/images/laser_hit.svg",
+        super().__init__(_img_path=os.path.relpath(f"{os.path.dirname(__file__)}/images/laser_hit.svg"),
                          _w_factor=2,
                          _h_factor=2,
                          _center=(_x, _y),
@@ -674,7 +673,7 @@ class HitMarks(_Group):
 
 class AfterBurner(_StaticSprite):
     def __init__(self, _ship, _side):
-        super().__init__(_img_path=f"Game/images/after_burner.png",
+        super().__init__(_img_path=os.path.relpath(f"{os.path.dirname(__file__)}/images/after_burner.png"),
                          _center=_ship.center,
                          _angle=_ship.angle)
 
@@ -820,7 +819,7 @@ class Forces:
 
 class Ship(_DynamicSprite):
     def __init__(self, _x, _y, _player, _color=(0, 0, 255)):
-        super().__init__(_img_path="Game/images/ship.svg", _center=(_x, _y))
+        super().__init__(_img_path=os.path.relpath(f"{os.path.dirname(__file__)}/images/ship.svg"), _center=(_x, _y))
 
         self.__color = _color
 
@@ -852,7 +851,7 @@ class Ship(_DynamicSprite):
 
     def __set_player_color(self):
         _player_color_mask = pygame.transform.scale(
-            pygame.image.load("Game/images/player_color_mask.svg"),
+            pygame.image.load(os.path.relpath(f"{os.path.dirname(__file__)}/images/player_color_mask.svg")),
             (
                 _width := self._im.get_width(),
                 _height := self._im.get_width())
