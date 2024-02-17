@@ -2,11 +2,11 @@ import datetime
 import json
 import uuid
 from typing import Dict
-from server.GameUtils import *
+from Server.Utils import *
 from flask_socketio import SocketIO, join_room, emit
 from flask import Flask, render_template, request, make_response, url_for, send_file, redirect, jsonify
-from server.GameUtils import *
-from server import GLOBALS
+from Server.Utils import *
+import GLOBALS
 import qrcode
 from io import BytesIO
 

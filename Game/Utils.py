@@ -1,9 +1,7 @@
-import datetime
+import GLOBALS
 import math
-import random
-import time
-from server import GLOBALS
 import pygame
+import random
 from typing import Self
 
 
@@ -234,21 +232,21 @@ class _DynamicSprite(_StaticSprite):
         Final Velocity
         --------------
         v = u + a . t
-        
+
         Displacement
         ------------
         Since updates are called at each computing elapsed time period (1/tick-rate)
         We break the velocity and time planes into segments and find the area in it
         ∴ s = 0.5 (u + v) . t  ←  trapezium rule
-        
+
         Drag Force
         ----------
         Fd = 0.5 ⋅ ρ ⋅ A ⋅ v^2 . Cd 
-        
+
         Resultant Force
         --------------
         Fr = Fe + Fd
-        
+
         Acceleration
         ------------
         ∴ acceleration = Fr / mass  
@@ -261,9 +259,11 @@ class _DynamicSprite(_StaticSprite):
         # print("@update", self._drag_force.angle,self._drag_force.value, self._force.value, self.speed)
 
         # Resultant Force
-        _Rx = self._force.value * math.sin(math.radians(self.force.angle)) + self._drag_force.value * math.sin(math.radians(self._drag_force.angle))
-        _Ry = self._force.value * math.cos(math.radians(self.force.angle)) + self._drag_force.value * math.cos(math.radians(self._drag_force.angle))
-        _Fr = math.sqrt(_Rx**2 + _Ry**2)
+        _Rx = self._force.value * math.sin(math.radians(self.force.angle)) + self._drag_force.value * math.sin(
+            math.radians(self._drag_force.angle))
+        _Ry = self._force.value * math.cos(math.radians(self.force.angle)) + self._drag_force.value * math.cos(
+            math.radians(self._drag_force.angle))
+        _Fr = math.sqrt(_Rx ** 2 + _Ry ** 2)
 
         # Resultant Angle
         _angle = math.atan2(_Rx, _Ry)
@@ -384,7 +384,7 @@ class Laser(_DynamicSprite):
             _index (int, optional): The index of the laser image. Defaults to 1.
         """
 
-        super().__init__(_img_path=f"server/images/laser{_index}.svg",
+        super().__init__(_img_path=f"Game/images/laser{_index}.svg",
                          _center=(_x, _y),
                          _angle=_angle,
                          _w_factor=4,
@@ -453,7 +453,7 @@ class Missile(_DynamicSprite):
             _ship (Ship): The ship from which the missile is fired.
         """
 
-        super().__init__(_img_path=f"server/images/missile.svg",
+        super().__init__(_img_path=f"Game/images/missile.svg",
                          _w_factor=2,
                          _h_factor=2,
                          _center=(_x, _y),
@@ -638,7 +638,7 @@ class Missiles(_Group):
 
 class LaserHit(_DynamicSprite):
     def __init__(self, _x, _y, _angle):
-        super().__init__(_img_path=f"server/images/laser_hit.svg",
+        super().__init__(_img_path=f"Game/images/laser_hit.svg",
                          _w_factor=2,
                          _h_factor=2,
                          _center=(_x, _y),
@@ -674,7 +674,7 @@ class HitMarks(_Group):
 
 class AfterBurner(_StaticSprite):
     def __init__(self, _ship, _side):
-        super().__init__(_img_path=f"server/images/after_burner.png",
+        super().__init__(_img_path=f"Game/images/after_burner.png",
                          _center=_ship.center,
                          _angle=_ship.angle)
 
@@ -820,7 +820,7 @@ class Forces:
 
 class Ship(_DynamicSprite):
     def __init__(self, _x, _y, _player, _color=(0, 0, 255)):
-        super().__init__(_img_path="server/images/ship.svg", _center=(_x, _y))
+        super().__init__(_img_path="Game/images/ship.svg", _center=(_x, _y))
 
         self.__color = _color
 
@@ -852,7 +852,7 @@ class Ship(_DynamicSprite):
 
     def __set_player_color(self):
         _player_color_mask = pygame.transform.scale(
-            pygame.image.load("server/images/player_color_mask.svg"),
+            pygame.image.load("Game/images/player_color_mask.svg"),
             (
                 _width := self._im.get_width(),
                 _height := self._im.get_width())
@@ -860,7 +860,8 @@ class Ship(_DynamicSprite):
         for x in range(_width):
             for y in range(_height):
                 if _p_c_m_a := _player_color_mask.get_at((x, y))[3] / 255:
-                    self._im.set_at((x, y), (self.__color[0] * _p_c_m_a, self.__color[1] * _p_c_m_a, self.__color[2] * _p_c_m_a, 255))
+                    self._im.set_at((x, y), (
+                    self.__color[0] * _p_c_m_a, self.__color[1] * _p_c_m_a, self.__color[2] * _p_c_m_a, 255))
         self._imc = self._im
 
     @property
@@ -999,93 +1000,6 @@ class Ships(_Group):
         return _ship
 
 
-class Player:
-    def __init__(self, _token: str, _username: str, _color: tuple):
-        self.__online = False
-        self.__lastOnline = datetime.datetime.now()
-
-        self.__token = _token
-        self.__username = _username
-
-        self.__ship: Ship = GLOBALS.SHIPS.newShip(_player=self, _color=_color)
-        self.__kills = 0
-        self.__deaths = 0
-
-    @property
-    def online(self):
-        return self.__online
-
-    @property
-    def lastOnline(self):
-        return self.__lastOnline
-
-    @property
-    def token(self):
-        return self.__token
-
-    @property
-    def username(self):
-        return self.__username
-
-    @property
-    def ship(self):
-        return self.__ship
-
-    def connect(self):
-        self.__online = True
-        self.__lastOnline = datetime.datetime.now()
-        if not self.ship.dead:
-            self.__ship.add(GLOBALS.SHIPS)
-
-    def disconnect(self):
-        self.__online = False
-        self.__lastOnline = datetime.datetime.now()
-        self.__ship.kill()
-
-    def sockSend(self, _event, _data):
-        GLOBALS.SOCK.send(_event=_event, _data=_data, _to=self.token)
-
-    def killed(self):
-        self.__kills += 1
-        self.sockSend(_event="kills", _data={"kills": self.__kills})
-
-    def died(self):
-        self.__deaths += 1
-        self.sockSend(_event="deaths", _data={"deaths": self.__deaths})
-
-    def __str__(self):
-        return (f"Player(\n"
-                f"\ttoken      : {self.token}\n"
-                f"\tonline     : {self.online}\n"
-                f"\tlast online: {self.lastOnline}\n"
-                ")")
-
-
-class Players:
-    def __init__(self, *_players):
-        self.__players = {}
-        self.add(_players)
-
-    @property
-    def players(self) -> dict:
-        return self.__players
-
-    def add(self, *_players):
-        for _player in _players:
-            if isinstance(_player, Player):
-                self.players[_player.token] = _player
-                # _player.ship.add(GLOBALS.SHIPS)
-
-    def newPlayer(self, _token: str, _username: str, _color: tuple) -> Player:
-        _player = Player(_token=_token, _username=_username, _color=_color)
-        self.add(_player)
-
-        return _player
-
-    def __getitem__(self, _token) -> Player:
-        return self.__players.get(_token, None)
-
-
 def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
     if _TSprite.ship != _TSprite2 and _TSprite.rect.colliderect(_TSprite2.rect):
         try:
@@ -1105,3 +1019,4 @@ def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
             pass
     else:
         return False
+

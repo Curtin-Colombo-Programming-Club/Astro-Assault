@@ -1,5 +1,5 @@
-from server.GameUtils import *
-from server.Controllers import *
+from Server.Utils import *
+from Server.Controllers import *
 
 # GLOBALS
 SOCK: SocketController | None = None
