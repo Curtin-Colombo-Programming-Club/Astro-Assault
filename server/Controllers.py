@@ -2,54 +2,59 @@ import datetime
 import json
 import uuid
 from typing import Dict
-from Server.Utils import *
-from flask_socketio import SocketIO, join_room, emit
+from Server.utils import *
+from flask_socketio import SocketIO, join_room, emit, namespace
 from flask import Flask, render_template, request, make_response, url_for, send_file, redirect, jsonify
-from Server.Utils import *
-import GLOBALS
+from Server.utils import *
 import qrcode
 from io import BytesIO
+import Server
+
+
+def token(client_addr) -> str:
+    uuid1 = uuid.uuid1()
+    uuid4 = str(uuid.uuid4()).replace("-", "")
+    uuid3 = str(uuid.uuid3(uuid1, client_addr)).replace("-", "")
+
+    return f"{uuid4}.{uuid3}"
 
 
 class SocketController:
     def __init__(self, socketio: SocketIO):
         self.__io = socketio
-        self.__players: Players = GLOBALS.PLAYERS
-        self.__sessions = {}
+        self.__players: Players = Server.PLAYERS
+        self.__player_sessions = {}
+        self.__display_sessions = {}
 
     def control(self):
-        @self.__io.on('connect')
-        def connect_handler():
+        @self.__io.on("connect", namespace="/")
+        def on_connect():
             client_address = request.remote_addr
             print(f"Client connected from IP address: {client_address}")
             print("connected, sid:", request.sid)
             _token = request.args.get('token')
             _player = self.__players[_token]
 
-            print(f"SOCK connection Established;\n{_player}")
+            if _player is None:
+                self.__io.emit("error", "none existing user!")
+            else:
 
-            """if _player is None:
-                uuid1 = uuid.uuid1()
-                uuid4 = str(uuid.uuid4()).replace("-", "")
-                uuid3 = str(uuid.uuid3(uuid1, client_address)).replace("-", "")
-                _player = self.__players.newPlayer(f"{uuid4}.{uuid3}")
-                _token = _player.token
+                print(f"SOCK connection Established;\n{_player}")
 
-                print(f"New player;\n{_player}")"""
+                _player.connect()
+                print(f"player online;\n{_player}")
 
-            _player.connect()
-            print(f"player online;\n{_player}")
+                self.__player_sessions[request.sid] = _player
 
-            self.__sessions[request.sid] = _player
+                join_room(sid=request.sid, room=_token)
 
-            join_room(sid=request.sid, room=_token)
+                emit("auth", {"token": _token}, to=_token)
+                emit('cookie_set',
+                     {'cookie_name': 'auth_token', 'cookie_value': _token,
+                      'expiry_time': (datetime.datetime.now() + datetime.timedelta(hours=1)).timestamp()})
 
-            emit("auth", {"token": _token}, to=_token)
-            emit('cookie_set',
-                 {'cookie_name': 'auth_token', 'cookie_value': _token, 'expiry_time': (datetime.datetime.now()+datetime.timedelta(hours=1)).timestamp()})
-
-        @self.__io.on("movement")
-        def movement_handler(data):
+        @self.__io.on("movement", namespace="/")
+        def on_movement(data):
             returnData: dict[str, str | int] = {"status": -1, "message": ""}
 
             _dx = data["dx"]
@@ -61,6 +66,15 @@ class SocketController:
             if _player:
                 _ship = _player.ship
                 _ship.sockMoveUpdate(_dx, _dy)
+
+                Server.DISPLAYS.movementUpdate(
+                    {
+                        "dx": _dx,
+                        "dy": _dy,
+                        "token": _token
+                    }
+                )
+
                 returnData["status"] = 200
                 returnData["message"] = "success!"
             else:
@@ -69,19 +83,27 @@ class SocketController:
 
             return returnData
 
-        @self.__io.on("trigger")
-        def trigger_handler(data):
+        @self.__io.on("trigger", namespace="/")
+        def on_trigger(data):
             returnData: dict[str, str | int] = {"status": -1, "message": ""}
 
             _n = data["n"]
             # print("trigger", _n)
-            _token = data.get('auth_token', None)
+            _token = data.get("auth_token", None)
 
             _player = self.__players[_token]
 
             if _player:
                 _ship = _player.ship
                 _ship.sockTriggerUpdate(_n)
+
+                Server.DISPLAYS.triggerUpdate(
+                    {
+                        "n": _n,
+                        "token": _token
+                    }
+                )
+
                 returnData["status"] = 200
                 returnData["message"] = "success!"
             else:
@@ -90,8 +112,8 @@ class SocketController:
 
             return returnData
 
-        @self.__io.on("respawn")
-        def respawn(data):
+        @self.__io.on("respawn", namespace="/")
+        def on_respawn(data):
             returnData: dict[str, str | int] = {"status": -1, "message": ""}
 
             _token = data.get('auth_token', None)
@@ -107,17 +129,37 @@ class SocketController:
                 returnData["status"] = 404
                 returnData["message"] = "player not found!"
 
-        @self.__io.on("disconnect")
-        def disconnect_handler():
+        @self.__io.on("disconnect", namespace="/")
+        def on_disconnect():
             print(request.cookies.get('auth_token'), "disconnect!")
 
-            _player = self.__sessions[request.sid]
+            _player = self.__player_sessions[request.sid]
             _player.disconnect()
 
-            self.__sessions.pop(request.sid, None)
+            self.__player_sessions.pop(request.sid, None)
 
-    def send(self, _event: str, _data, _to):
-        self.__io.emit(_event, _data, to=_to)
+        @self.__io.on("connect", namespace="/game")
+        def game_connect():
+            client_address = request.remote_addr
+            sid = request.sid
+            print(f"Screen disconnected from IP address: {client_address}")
+            print("> disconnected, sid:", sid)
+
+            _token = f"player.{token(request.remote_addr)}"
+            join_room(sid=sid, room=_token)
+            _d = Server.DISPLAYS.add(_token=_token, _display=Display(_token=_token))
+
+            self.__display_sessions[sid] = _d
+
+        @self.__io.on("disconnect", namespace="/game")
+        def game_disconnect():
+            sid = request.sid
+            _d = self.__display_sessions[sid]
+            Server.DISPLAYS.remove(_d.token)
+            self.__display_sessions.pop(sid, None)
+
+    def send(self, _event: str, _data, _to, _namespace):
+        self.__io.emit(_event, _data, to=_to, namespace=_namespace)
 
 
 class HTTPController:
@@ -125,7 +167,7 @@ class HTTPController:
         self.__app = app
         self.__app.template_folder = "../Client/templates"
         self.__app.static_folder = "../Client/static"
-        self.__players = GLOBALS.PLAYERS
+        self.__players = Server.PLAYERS
 
     def control(self):
         @self.__app.route("/", methods=["GET", "POST"])
@@ -140,15 +182,23 @@ class HTTPController:
             elif request.method == "POST":
                 _username = request.form.get("username", "no-name")
                 _color = tuple(json.loads(request.form.get("color", "[255, 255, 255]")))
-                uuid1 = uuid.uuid1()
-                uuid4 = str(uuid.uuid4()).replace("-", "")
-                uuid3 = str(uuid.uuid3(uuid1, request.remote_addr)).replace("-", "")
-                _token = f"{uuid4}.{uuid3}"
+                _token = f"player.{token(request.remote_addr)}"
                 print(request.form)
                 _player = self.__players.newPlayer(
                     _token=_token,
                     _username=_username,
                     _color=_color
+                )
+
+                Server.DISPLAYS.newComponent(
+                    "ship",
+                    {
+                        "x": _player.ship.x,
+                        "y": _player.ship.y,
+                        "username": _username,
+                        "color": _color,
+                        "token": _token
+                    }
                 )
 
                 _expiration_time = datetime.datetime.now() + datetime.timedelta(days=1)
@@ -160,15 +210,12 @@ class HTTPController:
 
                 return response
 
-        @self.__app.route("/controller", methods=["GET"])
-        def controller():
-            _token = request.cookies.get('auth_token', None)
-            _player = self.__players[_token]
+        @self.__app.route("/game", methods=["GET", "POST"])
+        def game():
+            response = make_response()
+            response.status = 200
 
-            if _player:
-                return render_template("controller3.html")
-            else:
-                return redirect("/")
+            return response
 
         @self.__app.route("/<path>.qr", methods=["GET"])
         def qr(path):

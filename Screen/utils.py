@@ -1,10 +1,12 @@
 import os
 
-import GLOBALS
 import math
 import pygame
 import random
 from typing import Self
+
+import Screen
+import Server
 
 
 class _StaticSprite(pygame.sprite.Sprite):
@@ -55,8 +57,8 @@ class _StaticSprite(pygame.sprite.Sprite):
         self._im = pygame.transform.scale(
             _im := pygame.image.load(_img_path),
             (
-                _im.get_width() * _w_factor * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
-                _im.get_height() * _h_factor * GLOBALS.C_RATIO * GLOBALS.H_RATIO
+                _im.get_width() * _w_factor * Screen.C_RATIO * Screen.W_RATIO,
+                _im.get_height() * _h_factor * Screen.C_RATIO * Screen.H_RATIO
             )
         )
         self._imc = self._im
@@ -135,11 +137,11 @@ class _StaticSprite(pygame.sprite.Sprite):
         """
         self._im = pygame.transform.scale(
             _im := pygame.image.load(self.__img_path),
-            (_im.get_width() * self.__w_factor * GLOBALS.C_RATIO * GLOBALS.W_RATIO,
-             _im.get_height() * self.__h_factor * GLOBALS.C_RATIO * GLOBALS.H_RATIO)
+            (_im.get_width() * self.__w_factor * Screen.C_RATIO * Screen.W_RATIO,
+             _im.get_height() * self.__h_factor * Screen.C_RATIO * Screen.H_RATIO)
         )
 
-        self.rect.center = (self.x * GLOBALS.W_RATIO / GLOBALS.p_W_RATIO, self.y * GLOBALS.H_RATIO / GLOBALS.p_H_RATIO)
+        self.rect.center = (self.x * Screen.W_RATIO / Screen.p_W_RATIO, self.y * Screen.H_RATIO / Screen.p_H_RATIO)
 
 
 class _DynamicSprite(_StaticSprite):
@@ -175,8 +177,8 @@ class _DynamicSprite(_StaticSprite):
             _angle (int | float): The initial angle of rotation of the sprite.
         """
         super().__init__(_img_path=_img_path, _center=_center, _w_factor=_w_factor, _h_factor=_h_factor, _angle=_angle)
-        self._force = GLOBALS.FORCES.newForce(_color=(0, 0, 255), _text="Fe")
-        self._drag_force = GLOBALS.FORCES.newForce(_color=(255, 0, 0), _text="Fd")
+        self._force = Screen.FORCES.newForce(_color=(0, 0, 255), _text="Fe")
+        self._drag_force = Screen.FORCES.newForce(_color=(255, 0, 0), _text="Fd")
         self._area = 0.001
         self._d_angle = 0
         self._mass = 1
@@ -223,7 +225,7 @@ class _DynamicSprite(_StaticSprite):
         """
 
         # angle change
-        self._angle -= self._d_angle / _tr if (_tr := GLOBALS.TICK_RATE) > 0 else 1
+        self._angle -= self._d_angle / _tr if (_tr := Screen.TICK_RATE) > 0 else 1
         if abs(self._angle) > 180:
             self._angle = -(self._angle / abs(self._angle) * 360 - self._angle)
 
@@ -255,7 +257,7 @@ class _DynamicSprite(_StaticSprite):
         """
 
         # Drag Force
-        self._drag_force.value = 0.5 * GLOBALS.DENSITY * self._area * (self.speed ** 2) * GLOBALS.DRAG_FACTOR
+        self._drag_force.value = 0.5 * Server.DENSITY * self._area * (self.speed ** 2) * Server.DRAG_FACTOR
         self._drag_force.start = self.center
         self._drag_force.angle = math.degrees(math.atan2(-self.velocity[0], -self.velocity[1]))
         # print("@update", self._drag_force.angle,self._drag_force.value, self._force.value, self.speed)
@@ -274,7 +276,7 @@ class _DynamicSprite(_StaticSprite):
         self._acceleration = _Fr / self.mass
 
         # time
-        _t = 1 / GLOBALS.TICK_RATE
+        _t = 1 / Screen.TICK_RATE
 
         # initial velocity
         _u = self.velocity
@@ -292,12 +294,12 @@ class _DynamicSprite(_StaticSprite):
         _y = self.y + _s_y
 
         if _x < 0:
-            _x = GLOBALS.WIDTH
-        if _x > GLOBALS.WIDTH:
+            _x = Screen.WIDTH
+        if _x > Screen.WIDTH:
             _x = 0
         if _y < 0:
-            _y = GLOBALS.HEIGHT
-        if _y > GLOBALS.HEIGHT:
+            _y = Screen.HEIGHT
+        if _y > Screen.HEIGHT:
             _y = 0
 
         self._rect.center = (_x, _y)
@@ -383,7 +385,7 @@ class Laser(_DynamicSprite):
             _index (int, optional): The index of the laser image. Defaults to 1.
         """
 
-        super().__init__(_img_path=f"Game/images/laser{_index}.svg",
+        super().__init__(_img_path=f"{os.path.dirname(__file__)}/images/laser{_index}.svg",
                          _center=(_x, _y),
                          _angle=_angle,
                          _w_factor=4,
@@ -410,7 +412,7 @@ class Laser(_DynamicSprite):
         Updates the position and state of the laser.
         """
         super().update()
-        self._seconds += 1 / GLOBALS.FPS
+        self._seconds += 1 / Screen.TICK_RATE
 
         if self._seconds > 1:
             self.kill()
@@ -452,7 +454,7 @@ class Missile(_DynamicSprite):
             _ship (Ship): The ship from which the missile is fired.
         """
 
-        super().__init__(_img_path=f"Game/images/missile.svg",
+        super().__init__(_img_path=f"{os.path.dirname(__file__)}/images/missile.svg",
                          _w_factor=2,
                          _h_factor=2,
                          _center=(_x, _y),
@@ -481,7 +483,7 @@ class Missile(_DynamicSprite):
             Missile: The updated Missile object.
         """
         super().update()
-        self._seconds += 1 / GLOBALS.FPS
+        self._seconds += 1 / Screen.TICK_RATE
 
         if self._seconds > 2:
             self.kill()
@@ -548,8 +550,8 @@ class Lasers(_Group):
         Returns:
             Laser: The newly created laser object.
         """
-        _x_off = 31 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if _ship.primary_chamber == "left" else 1)
-        _y_off = 11 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
+        _x_off = 31 * Screen.C_RATIO * Screen.W_RATIO * (-1 if _ship.primary_chamber == "left" else 1)
+        _y_off = 11 * Screen.C_RATIO * Screen.H_RATIO
         _offset_theta = math.atan2(-_y_off, _x_off)
         _r = math.sqrt(_x_off ** 2 + _y_off ** 2)
         _ship_angle = -_ship.angle
@@ -618,8 +620,8 @@ class Missiles(_Group):
         Returns:
             Missile: The newly created missile object.
         """
-        _x_off = 36 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if _ship.secondary_chamber == "left" else 1)
-        _y_off = -11 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
+        _x_off = 36 * Screen.C_RATIO * Screen.W_RATIO * (-1 if _ship.secondary_chamber == "left" else 1)
+        _y_off = -11 * Screen.C_RATIO * Screen.H_RATIO
         _offset_theta = math.atan2(_y_off, _x_off)
         _r = math.sqrt(_x_off ** 2 + _y_off ** 2)
         _ship_angle = -_ship.angle
@@ -648,7 +650,7 @@ class LaserHit(_DynamicSprite):
 
     def update(self, *args, **kwargs):
         super().update()
-        self._timer += 1 / GLOBALS.FPS
+        self._timer += 1 / Screen.TICK_RATE
         self._im.set_alpha(int(255 - 255 * self._timer))
         if self._timer >= 1:
             self.kill()
@@ -694,8 +696,8 @@ class AfterBurner(_StaticSprite):
         return self._imc
 
     def __pos(self, _ship):
-        _x_off = 56 * GLOBALS.C_RATIO * GLOBALS.W_RATIO * (-1 if self._side == "left" else 1)
-        _y_off = 83 * GLOBALS.C_RATIO * GLOBALS.H_RATIO
+        _x_off = 56 * Screen.C_RATIO * Screen.W_RATIO * (-1 if self._side == "left" else 1)
+        _y_off = 83 * Screen.C_RATIO * Screen.H_RATIO
         _offset_theta = math.atan2(_y_off, _x_off)
         _r = math.sqrt(_x_off ** 2 + _y_off ** 2)
         _ship_angle = -_ship.angle
@@ -703,16 +705,16 @@ class AfterBurner(_StaticSprite):
         # print("new l", _ship_angle,  _offset_theta)
 
         self._rect.center = (_ship.x + (_r * math.cos(math.radians(_ship_angle) + _offset_theta)) - math.sin(
-            math.radians(_ship_angle)) * self._im.get_height() * GLOBALS.W_RATIO * GLOBALS.C_RATIO * self._stretch / 2,
+            math.radians(_ship_angle)) * self._im.get_height() * Screen.W_RATIO * Screen.C_RATIO * self._stretch / 2,
                              _ship.y + (_r * math.sin(math.radians(_ship_angle) + _offset_theta)) + math.cos(
                                  math.radians(
-                                     _ship_angle)) * self._im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO * self._stretch / 2)
+                                     _ship_angle)) * self._im.get_height() * Screen.H_RATIO * Screen.C_RATIO * self._stretch / 2)
 
     def update(self, *args, **kwargs):
         _ship = kwargs["_ship"]
         self._angle = _ship.angle
         _force = abs(_ship.force.value) if _ship.force.value <= 0 else 0
-        self._stretch = 3 * _force / GLOBALS.UNIT_FORCE
+        self._stretch = 3 * _force / Server.UNIT_FORCE
 
         self.__pos(_ship)
 
@@ -818,15 +820,16 @@ class Forces:
 
 
 class Ship(_DynamicSprite):
-    def __init__(self, _x, _y, _player, _color=(0, 0, 255)):
+    def __init__(self, _x, _y, _token, _color=(0, 0, 255), _username="NoUsErNaMe"):
         super().__init__(_img_path=os.path.relpath(f"{os.path.dirname(__file__)}/images/ship.svg"), _center=(_x, _y))
 
         self.__color = _color
+        self.__username = _username
 
         # setting player color on ship
         self.__set_player_color()
 
-        self._player = _player
+        self._token = _token
 
         self._mass = 1000
         self._area = 250000
@@ -847,7 +850,7 @@ class Ship(_DynamicSprite):
 
         self._last_movement_update = 0
 
-        GLOBALS.FORCES.newForce(_color=(0, 0, 255), _text="Fe")
+        Screen.FORCES.newForce(_color=(0, 0, 255), _text="Fe")
 
     def __set_player_color(self):
         _player_color_mask = pygame.transform.scale(
@@ -864,8 +867,12 @@ class Ship(_DynamicSprite):
         self._imc = self._im
 
     @property
-    def player(self):
-        return self._player
+    def token(self):
+        return self._token
+
+    @property
+    def username(self):
+        return self.__username
 
     @property
     def primary_chamber(self):
@@ -892,10 +899,10 @@ class Ship(_DynamicSprite):
         self.force.start = self.center
 
         _username = pygame.transform.scale(
-            _im := pygame.font.Font(None, 40).render(self.player.username, True, (255, 255, 255)),
-            (_im.get_width() * GLOBALS.W_RATIO * GLOBALS.C_RATIO, _im.get_height() * GLOBALS.H_RATIO * GLOBALS.C_RATIO))
+            _im := pygame.font.Font(None, 40).render(self.username, True, (255, 255, 255)),
+            (_im.get_width() * Screen.W_RATIO * Screen.C_RATIO, _im.get_height() * Screen.H_RATIO * Screen.C_RATIO))
         _screen.blit(_username, (
-            self.x - _username.get_width() / 2, self.rect.top - _username.get_height() - 10 * GLOBALS.H_RATIO))
+            self.x - _username.get_width() / 2, self.rect.top - _username.get_height() - 10 * Screen.H_RATIO))
 
         # super update
         super().update()
@@ -904,7 +911,7 @@ class Ship(_DynamicSprite):
         self._flames.draw(_screen)
         # timers
         if self._secondary_timing:
-            self._secondary_timer += 1 / GLOBALS.FPS
+            self._secondary_timer += 1 / Screen.TICK_RATE
             if self._secondary_timer >= 5:
                 self._secondary_timer = 0
                 self._secondary_timing = False
@@ -924,10 +931,10 @@ class Ship(_DynamicSprite):
         if self._dead:
             self._health = 100
             self._dead = False
-            self._rect.center = (random.randint(0, GLOBALS.WIDTH), random.randint(0, GLOBALS.HEIGHT))
-            self.add(GLOBALS.SHIPS)
+            self._rect.center = (random.randint(0, Screen.WIDTH), random.randint(0, Screen.HEIGHT))
+            self.add(Screen.SHIPS)
 
-    def sockMoveUpdate(self, _dx, _dy):
+    def movementUpdate(self, _dx, _dy):
         # angle change
         self._d_angle = 100 * _dx
 
@@ -938,7 +945,7 @@ class Ship(_DynamicSprite):
         F = uf . f%
         F = m . a  →  a = F / m  
         """
-        _unit_force = GLOBALS.UNIT_FORCE
+        _unit_force = Server.UNIT_FORCE
         _force_factor = _dy if _dy <= 0 else _dy / 2
         self._force.value = _unit_force * _force_factor
         # -----
@@ -953,16 +960,16 @@ class Ship(_DynamicSprite):
             self._velocity[0] = - _maxSpeed * math.sin(math.radians(_angle))
             self._velocity[1] = - _maxSpeed * math.cos(math.radians(_angle))"""
 
-    def sockTriggerUpdate(self, _n):
+    def triggerUpdate(self, _n):
         if _n == 2:
             self._primary_3_counter += 1
-            GLOBALS.LASERS.newLaser(_ship=self)
+            Screen.LASERS.newLaser(_ship=self)
             if self._primary_3_counter == 3:
                 self._primary_3_counter = 0
                 self._primary_chamber = "left" if self.primary_chamber == "right" else "right"
         elif _n == 3:
             if self._secondary_timer == 0:
-                GLOBALS.MISSILES.newMissile(_ship=self)
+                Screen.MISSILES.newMissile(_ship=self)
                 self._secondary_chamber = "left" if self._secondary_chamber == "right" else "right"
                 if self._secondary_chamber == "right":
                     self._secondary_timing = True
@@ -987,16 +994,29 @@ class Ships(_Group):
         return self.sprites()
 
     def add(self, *_ships):
+        print("@add", _ships)
         for _ship in _ships:
-            if isinstance(_ships, Ship):
+            if isinstance(_ship, Ship):
                 super().add(_ship)
 
-    def newShip(self, _player, _color) -> Ship:
+    def new(self, _token, _color, _x, _y, _username) -> Ship:
         # _ship = Ship(_player=_player, _x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT))
-        _ship = Ship(_player=_player, _x=400, _y=0, _color=_color)
+        _ship = Ship(_token=_token, _x=_x * Screen.W_RATIO, _y=_y * Screen.H_RATIO, _color=_color, _username=_username)
         self.add(_ship)
 
         return _ship
+
+    def sockMovementUpdate(self, _token, _dx, _dy):
+        for _ship in self.ships:
+            if _ship.token == _token:
+                _ship.movementUpdate(_dx=_dx, _dy=_dy)
+                break
+
+    def sockTriggerUpdate(self, _token, _n):
+        for _ship in self.ships:
+            if _ship.token == _token:
+                _ship.triggerUpdate(_n=_n)
+                break
 
 
 def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
@@ -1009,7 +1029,7 @@ def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
                     3]
             if _a:
                 _hm = LaserHit(_x=_tc[0], _y=_tc[1], _angle=_TSprite.angle)
-                GLOBALS.HIT_MARKS.add(_hm)
+                Screen.HIT_MARKS.add(_hm)
                 _TSprite2.dealDamage(1 if isinstance(_TSprite, Laser) else 2 if isinstance(_TSprite, Missile) else 0)
                 if _TSprite2.dead:
                     _TSprite.ship.player.killed()

@@ -1,32 +1,51 @@
-import sys
-import time
+import argparse
 from time import sleep
-import pygame.display
-import pygame.display
-import GLOBALS
-import Game
-from Game.Utils import *
 import Server
 from Server import app, socketio
-from Server.Utils import *
-from Server.Controllers import *
+from Server.utils import *
+from Server.controllers import *
 import threading
-import pygame.surface
-import sys
+import Screen
+from Screen.utils import *
 
 
-def main(*args, **kwargs):
+def main():
+    parser = argparse.ArgumentParser(description='Description of your program')
+
+    # Add arguments
+    parser.add_argument('--host', type=int, help='Description of arg1')
+    parser.add_argument('--port', '-p', type=float, help='Description of arg2')
+
+    # Parse the command-line arguments
+    args = parser.parse_args()
+
+    # Access the parsed arguments
+    print("arg1:", args.host)
+    print("arg2:", args.port)
     Server.init()
-    Game.init()
+    Screen.init()
 
-    GameThread = threading.Thread(target=Game.run)
+    GameThread = threading.Thread(target=Screen.run)
     GameThread.daemon = True
     GameThread.start()
 
     sleep(2)
-    Server.start()
+    st = threading.Thread(
+        target=Server.start,
+        kwargs={
+            "app": app,
+            "host": args.host if args.host else "0.0.0.0",
+            "port": args.port if args.port else 5000,
+            "debug": False,
+            "use_reloader": False,
+            "allow_unsafe_werkzeug": True
+        }
+    )
+    st.run()
+    st.daemon = True
+    print("reeeedaaaa")
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
 

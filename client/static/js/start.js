@@ -146,7 +146,7 @@ function sendData(_username, _color) {
             console.log(data); // Log the response data
             localStorage.auth_token = data.auth_token;
             localStorage.username = data.username;
-            //window.location.href = "/";
+            window.location.href = "/";
         })
         .catch(error => {
             console.error('Error:', error);

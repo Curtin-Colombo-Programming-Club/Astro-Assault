@@ -1,8 +1,8 @@
-from Server.Utils import *
-from Server.Controllers import *
+from Server.utils import *
+from Server import controllers
 
 # GLOBALS
-SOCK: SocketController | None = None
+SOCK: Controllers.SocketController | None = None
 FPS = 0
 ELAPSED_TIME = 1
 TICK_RATE = 1

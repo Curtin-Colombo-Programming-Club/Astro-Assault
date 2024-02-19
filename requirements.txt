@@ -1,4 +1,8 @@
 pygame>=2.5.2
 flask>=3.0.1
 flask-socketio
-qrcode
+qrcode>=7.4.2
+requests
+websocket-client
+python-socketio
+numpy>=1.26.3
