@@ -5,6 +5,7 @@ import time
 from Screen.sock import *
 import Screen.sock as sock
 import socketio
+import os
 
 
 SHIPS: Ships | None = None
