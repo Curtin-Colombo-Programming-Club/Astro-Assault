@@ -133,10 +133,13 @@ class SocketController:
         def on_disconnect():
             print(request.cookies.get('auth_token'), "disconnect!")
 
-            _player = self.__player_sessions[request.sid]
-            _player.disconnect()
+            try:
+                _player = self.__player_sessions[request.sid]
+                _player.disconnect()
 
-            self.__player_sessions.pop(request.sid, None)
+                self.__player_sessions.pop(request.sid, None)
+            except KeyError:
+                pass
 
         @self.__io.on("connect", namespace="/game")
         def game_connect():

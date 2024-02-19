@@ -914,17 +914,6 @@ class Ship(_DynamicSprite):
                 self._secondary_timer = 0
                 self._secondary_timing = False
 
-    def dealDamage(self, _type: int):
-        if _type == 1:
-            self._health -= 1
-        elif _type == 2:
-            self._health -= 10
-
-        if self._health <= 0:
-            self.kill()
-            self._dead = True
-            self._player.died()
-
     def respawn(self):
         if self._dead:
             self._health = 100
@@ -1028,9 +1017,6 @@ def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
             if _a:
                 _hm = LaserHit(_x=_tc[0], _y=_tc[1], _angle=_TSprite.angle)
                 Screen.HIT_MARKS.add(_hm)
-                _TSprite2.dealDamage(1 if isinstance(_TSprite, Laser) else 2 if isinstance(_TSprite, Missile) else 0)
-                if _TSprite2.dead:
-                    _TSprite.ship.player.killed()
                 return True
         except IndexError:
             pass
