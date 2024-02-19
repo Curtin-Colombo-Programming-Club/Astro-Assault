@@ -60,7 +60,7 @@ def run():
     pygame.display.set_caption("Astro Assault")
 
     # Set the icon
-    pygame.display.set_icon(pygame.image.load("images/icon.png"))
+    pygame.display.set_icon(pygame.image.load(f"{os.path.dirname(__file__)}/images/icon.png"))
 
     # Set up colors
     white = (255, 255, 255)
