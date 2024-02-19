@@ -3,11 +3,15 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(CURRENT_DIR))
 sys.path.append(fr"{os.path.dirname(CURRENT_DIR)}\Server")
 
+import ctypes
 import Screen
 import argparse
 
 
 def main():
+    if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+
     parser = argparse.ArgumentParser(description='Description of your program')
 
     # Add arguments

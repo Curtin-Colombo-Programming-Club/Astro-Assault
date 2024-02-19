@@ -60,6 +60,12 @@ class _StaticComponent:
         """
         return self._angle
 
+    def __dict__(self):
+        return {
+            "x": self.x,
+            "y": self.y
+        }
+
 
 class _DynamicComponent(_StaticComponent):
     def __init__(self, _center, _angle=0):
@@ -553,6 +559,12 @@ class Ship(_DynamicComponent):
                 if self._secondary_chamber == "right":
                     self._secondary_timing = True
 
+    def __dict__(self):
+        _d = super().__dict__()
+        _d["token"] = self.player.token
+
+        return _d
+
     def __str__(self):
         return (f"Ship(\n"
                 f"\tPos: {self.center}\n"
@@ -570,6 +582,10 @@ class Ships(_Group):
         self.add(_ship)
 
         return _ship
+
+    def __iter__(self):
+        for _c in self.components:
+            yield dict(_c)
 
 
 """def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
