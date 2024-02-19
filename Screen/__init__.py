@@ -46,7 +46,7 @@ def init():
     Screen.GAMERUNNING = False
     pygame.init()
     eventManager(sio)
-    connect(sio)
+    # connect(sio)
 
 
 def run():

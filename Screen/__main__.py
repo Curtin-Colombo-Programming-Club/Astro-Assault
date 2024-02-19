@@ -13,6 +13,7 @@ def main():
     args = parser.parse_args()
 
     Screen.init()
+    Screen.connect(host=args.host if args.host else "localhost", port=args.port if args.port else 5000, sio=Screen.sio)
     Screen.run()
 
 
