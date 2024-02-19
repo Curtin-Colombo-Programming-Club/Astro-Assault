@@ -8,7 +8,6 @@ import random
 from typing import Self
 
 import Screen
-import Server
 
 
 class _StaticSprite(pygame.sprite.Sprite):
@@ -259,7 +258,7 @@ class _DynamicSprite(_StaticSprite):
         """
 
         # Drag Force
-        self._drag_force.value = 0.5 * Server.DENSITY * self._area * (self.speed ** 2) * Server.DRAG_FACTOR
+        self._drag_force.value = 0.5 * Screen.DENSITY * self._area * (self.speed ** 2) * Screen.DRAG_FACTOR
         self._drag_force.start = self.center
         self._drag_force.angle = math.degrees(math.atan2(-self.velocity[0], -self.velocity[1]))
         # print("@update", self._drag_force.angle,self._drag_force.value, self._force.value, self.speed)
@@ -716,7 +715,7 @@ class AfterBurner(_StaticSprite):
         _ship = kwargs["_ship"]
         self._angle = _ship.angle
         _force = abs(_ship.force.value) if _ship.force.value <= 0 else 0
-        self._stretch = 3 * _force / Server.UNIT_FORCE
+        self._stretch = 3 * _force / Screen.UNIT_FORCE
 
         self.__pos(_ship)
 
@@ -947,7 +946,7 @@ class Ship(_DynamicSprite):
         F = uf . f%
         F = m . a  →  a = F / m  
         """
-        _unit_force = Server.UNIT_FORCE
+        _unit_force = Screen.UNIT_FORCE
         _force_factor = _dy if _dy <= 0 else _dy / 2
         self._force.value = _unit_force * _force_factor
         # -----

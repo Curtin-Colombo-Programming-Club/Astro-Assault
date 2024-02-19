@@ -26,6 +26,10 @@ W_RATIO = 1
 p_W_RATIO = W_RATIO
 C_RATIO = 2 / 3
 
+UNIT_FORCE = 300_000
+DENSITY = 0.0001
+DRAG_FACTOR = 0.05
+
 sio = socketio.Client()
 
 
