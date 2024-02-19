@@ -1,3 +1,8 @@
+import os, sys
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(CURRENT_DIR))
+sys.path.append(fr"{os.path.dirname(CURRENT_DIR)}\Screen")
+
 import Server
 import threading
 import argparse
