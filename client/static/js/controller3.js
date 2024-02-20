@@ -113,7 +113,7 @@ function checkOrientation() {
 
 function sendMovement() {
     console.log(joydy);
-    socket.volatile.emit("movement", { dx: joydx, dy: joydy, auth_token: localStorage.token }, (ack) => {
+    socket.volatile.emit("movement", { dx: joydx, dy: joydy, auth_token: localStorage.auth_token }, (ack) => {
         if (ack.status == 200) {
             if (!joystickWrapper.classList.contains("good")) {
                 joystickWrapper.classList.add("good");
@@ -134,7 +134,7 @@ function sendMovement() {
 }
 
 function sendTrigger(_n) {
-    socket.volatile.emit("trigger", { n: _n, auth_token: localStorage.token }, (ack) => {
+    socket.volatile.emit("trigger", { n: _n, auth_token: localStorage.auth_token }, (ack) => {
         if (ack.status == 200) {
             //
         }

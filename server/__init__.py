@@ -6,7 +6,7 @@ from Server.utils import *
 
 
 SOCK: SocketController | None = None
-PLAYERS = None
+PLAYERS: Players | None = None
 DISPLAYS: Displays | None = None
 
 # inits

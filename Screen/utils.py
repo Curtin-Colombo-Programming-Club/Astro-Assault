@@ -992,16 +992,6 @@ class Ship(_DynamicSprite):
         self._force.value = _unit_force * _force_factor
         # -----
 
-        # speed constrains
-        """_maxSpeed = GLOBALS.MAX_SPEED
-        print(self.velocity)
-
-        # max speed
-        if abs(self.speed) > _maxSpeed:
-            _angle = math.degrees(math.atan2(-self._velocity[0], -self._velocity[1]))
-            self._velocity[0] = - _maxSpeed * math.sin(math.radians(_angle))
-            self._velocity[1] = - _maxSpeed * math.cos(math.radians(_angle))"""
-
     def triggerUpdate(self, _n):
         if _n == 2:
             self._primary_3_counter += 1
@@ -1015,6 +1005,17 @@ class Ship(_DynamicSprite):
                 self._secondary_chamber = "left" if self._secondary_chamber == "right" else "right"
                 if self._secondary_chamber == "right":
                     self._secondary_timing = True
+
+    def dealDamage(self, _type):
+        if _type == 1:
+            self._health -= 1
+        elif _type == 2:
+            self._health -= 10
+
+        if self._health <= 0:
+            self._dead = True
+            Screen.DEAD_SHIPS.add(_ship=self)
+            self.kill()
 
     def on_screen_resize(self):
         self._on_screen_resize()
@@ -1078,7 +1079,7 @@ class Ships(_Group):
                 return _ship
 
 
-class OfflineShips:
+class SimpleShips:
     def __init__(self):
         self.__ships = []
 
@@ -1090,7 +1091,7 @@ class OfflineShips:
         if _ship in self.__ships:
             self.__ships.remove(_ship)
 
-    def __getitem__(self, _token):
+    def __getitem__(self, _token) -> Ship:
         for _ship in self.__ships:
             if _ship.token == _token:
                 return _ship
@@ -1108,6 +1109,10 @@ def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
                     (_TSprite.center[0] - _TSprite2.rect.left, _TSprite.center[1] - _TSprite2.rect.top))[
                     3]
             if _a:
+                _TSprite2.dealDamage(_type=1 if isinstance(_TSprite, Laser) else 2)
+                if _TSprite2.dead:
+                    Screen.sio.emit(event="player_died", data={"token": _TSprite2.token}, namespace="/game")
+                    Screen.sio.emit(event="player_killed", data={"token": _TSprite.ship.token}, namespace="/game")
                 _hm = LaserHit(_x=_tc[0], _y=_tc[1], _angle=_TSprite.angle)
                 Screen.HIT_MARKS.add(_hm)
                 return True

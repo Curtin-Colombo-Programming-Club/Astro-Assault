@@ -145,7 +145,17 @@ class SocketController:
 
             self.__display_sessions[sid] = _d
 
-            print("@connect")
+        @self.__io.on("player_died", namespace="/game")
+        def player_dead(data):
+            _player_token = data["token"]
+            _player = Server.PLAYERS[_player_token]
+            _player.died()
+
+        @self.__io.on("player_killed", namespace="/game")
+        def player_dead(data):
+            _player_token = data["token"]
+            _player = Server.PLAYERS[_player_token]
+            _player.killed()
 
         @self.__io.on("disconnect", namespace="/game")
         def game_disconnect():

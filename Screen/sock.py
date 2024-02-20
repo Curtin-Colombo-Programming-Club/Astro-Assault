@@ -46,8 +46,13 @@ def eventManager(sio):
 
     @sio.on("player_respawn", namespace="/game")
     def on_player_respawn(data):
-        _token = data["token"]
-        Screen.SHIPS[_token].respawn()
+        try:
+            _token = data["token"]
+            _ship = Screen.DEAD_SHIPS[_token]
+            _ship.respawn()
+            Screen.DEAD_SHIPS.remove(_ship)
+        except Exception:
+            pass
 
     @sio.on("player_connect", namespace="/game")
     def on_player_connect(data):

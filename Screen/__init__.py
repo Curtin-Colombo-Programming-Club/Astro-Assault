@@ -30,7 +30,8 @@ W_RATIO = WIDTH / 1920
 p_W_RATIO = W_RATIO
 C_RATIO = 2 / 3
 
-OFFLINE_SHIPS: OfflineShips | None = None
+OFFLINE_SHIPS: SimpleShips | None = None
+DEAD_SHIPS: SimpleShips | None = None
 
 UNIT_FORCE = 300_000
 DENSITY = 0.0001
@@ -49,7 +50,8 @@ def on_screen_resize():
 
 def init():
     Screen.SHIPS = Ships()
-    Screen.OFFLINE_SHIPS = OfflineShips()
+    Screen.OFFLINE_SHIPS = SimpleShips()
+    Screen.DEAD_SHIPS = SimpleShips()
     Screen.LASERS = Lasers()
     Screen.MISSILES = Missiles()
     Screen.HIT_MARKS = HitMarks()
