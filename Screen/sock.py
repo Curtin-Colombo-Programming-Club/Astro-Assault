@@ -10,6 +10,11 @@ def eventManager(sio):
     def on_connect():
         print('Connected to server')
 
+    @sio.on("post_connect", namespace="/game")
+    def on_post_connect(data):
+        Screen.NAME = data["name"]
+        print('Connected to server')
+
     @sio.event
     def on_disconnect():
         print('Disconnected from server')
@@ -39,8 +44,18 @@ def eventManager(sio):
         _n = data["n"]
         Screen.SHIPS.sockTriggerUpdate(_token=_token, _n=_n)
 
+    @sio.on("player_respawn", namespace="/game")
+    def on_player_respawn(data):
+        _token = data["token"]
+        Screen.SHIPS[_token].respawn()
+
+    @sio.on("player_connect", namespace="/game")
+    def on_player_connect(data):
+        _token = data["token"]
+        Screen.SHIPS[_token].add(Screen.SHIPS)
+
     @sio.on("player_disconnect", namespace="/game")
-    def on_trigger_update(data):
+    def on_player_disconnect(data):
         _token = data["token"]
         Screen.SHIPS[_token].kill()
 

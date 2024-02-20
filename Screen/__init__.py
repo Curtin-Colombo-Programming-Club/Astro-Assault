@@ -10,6 +10,7 @@ import socketio
 import os
 
 
+NAME: str = ""
 SHIPS: Ships | None = None
 LASERS: Lasers | None = None
 MISSILES: Missiles | None = None

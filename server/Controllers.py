@@ -41,17 +41,12 @@ class SocketController:
 
                 print(f"SOCK connection Established;\n{_player}")
 
-                _player.connect()
+                Server.DISPLAYS.playerConnect(_player_token=_token)
                 print(f"player online;\n{_player}")
 
                 self.__player_sessions[request.sid] = _player
 
                 join_room(sid=request.sid, room=_token)
-
-                emit("auth", {"token": _token}, to=_token)
-                emit('cookie_set',
-                     {'cookie_name': 'auth_token', 'cookie_value': _token,
-                      'expiry_time': (datetime.datetime.now() + datetime.timedelta(hours=1)).timestamp()})
 
         @self.__io.on("movement", namespace="/")
         def on_movement(data):
@@ -87,7 +82,6 @@ class SocketController:
             returnData: dict[str, str | int] = {"status": -1, "message": ""}
 
             _n = data["n"]
-            # print("trigger", _n)
             _token = data.get("auth_token", None)
 
             _player = self.__players[_token]
@@ -118,8 +112,7 @@ class SocketController:
             _player = self.__players[_token]
 
             if _player:
-                _ship = _player.ship
-                _ship.respawn()
+                # respawn
                 returnData["status"] = 200
                 returnData["message"] = "success!"
             else:

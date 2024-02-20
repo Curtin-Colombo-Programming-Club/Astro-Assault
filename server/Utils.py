@@ -106,6 +106,10 @@ class Display:
         self.__players = {}
 
     @property
+    def name(self):
+        return self.__name
+
+    @property
     def token(self):
         return self.__token
 
@@ -139,7 +143,11 @@ class Displays:
 
     def new(self, _token):
         self.__displays[_token] = Display(_token=_token, _index=self.count + 1)
-
+        self.sockSend(
+            _event="post_connect",
+            _data={"name": self.__displays[_token].name},
+            _token=_token
+        )
         return self.__displays[_token]
 
     def remove(self, _token):
@@ -187,9 +195,15 @@ class Displays:
 
         return returnState
 
-    def playerDisconnect(self, _player_token: str):
+    def playerConnect(self, _player_token: str):
         _player: Player = Server.PLAYERS[_player_token]
         _player.connect()
+        _display: Display = _player.display
+        self.sockSend(_event="player_connect", _data={"token": _player_token}, _token=_display.token)
+
+    def playerDisconnect(self, _player_token: str):
+        _player: Player = Server.PLAYERS[_player_token]
+        _player.disconnect()
         _display: Display = _player.display
         self.sockSend(_event="player_disconnect", _data={"token": _player_token}, _token=_display.token)
 
