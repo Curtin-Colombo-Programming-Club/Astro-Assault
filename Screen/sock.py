@@ -51,11 +51,14 @@ def eventManager(sio):
 
     @sio.on("player_connect", namespace="/game")
     def on_player_connect(data):
-        _token = data["token"]
-        print("@con",Screen.OFFLINE_SHIPS)
-        _ship = Screen.OFFLINE_SHIPS[_token]
-        _ship.add(Screen.SHIPS)
-        Screen.OFFLINE_SHIPS.remove(_ship)
+        try:
+            _token = data["token"]
+            print("@con",Screen.OFFLINE_SHIPS)
+            _ship = Screen.OFFLINE_SHIPS[_token]
+            _ship.add(Screen.SHIPS)
+            Screen.OFFLINE_SHIPS.remove(_ship)
+        except Exception:
+            pass
 
     @sio.on("player_disconnect", namespace="/game")
     def on_player_disconnect(data):
