@@ -34,6 +34,11 @@ socket.on('deaths', (data) => {
     deaths.children[0].innerText = data.deaths
 });
 
+socket.on("kds", (data) => {
+    kills.children[0].innerText = data.kills
+    deaths.children[0].innerText = data.deaths
+});
+
 // DOM listners
 window.addEventListener('resize', checkOrientation);
 

@@ -48,6 +48,8 @@ class SocketController:
 
                 join_room(sid=request.sid, room=_token)
 
+                emit("kds", {"kills": _player.kills, "deaths": _player.deaths})
+
         @self.__io.on("movement", namespace="/")
         def on_movement(data):
             returnData: dict[str, str | int] = {"status": -1, "message": ""}

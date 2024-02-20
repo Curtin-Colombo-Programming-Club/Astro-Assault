@@ -27,6 +27,14 @@ class Player:
         self.__display = _display
 
     @property
+    def kills(self):
+        return self.__kills
+
+    @property
+    def deaths(self):
+        return self.__deaths
+
+    @property
     def color(self):
         return self.__color
 
