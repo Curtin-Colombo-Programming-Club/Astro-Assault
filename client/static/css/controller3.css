@@ -189,8 +189,9 @@ main.portrait {
 }
 
 .button-text-1 {
-    color: white;
+    color: green;
     font-size: 16px;
+    font-weight: 800;
     /* Adjust the font size as needed */
     display: flex;
     justify-content: center;
@@ -201,6 +202,7 @@ main.portrait {
 .button-text-2 {
     color: red;
     font-size: 16px;
+    font-weight: 800;
     /* Adjust the font size as needed */
     display: flex;
     justify-content: center;
