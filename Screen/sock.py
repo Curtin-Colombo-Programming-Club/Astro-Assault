@@ -52,6 +52,7 @@ def eventManager(sio):
     @sio.on("player_connect", namespace="/game")
     def on_player_connect(data):
         _token = data["token"]
+        print("@con",Screen.OFFLINE_SHIPS)
         _ship = Screen.OFFLINE_SHIPS[_token]
         _ship.add(Screen.SHIPS)
         Screen.OFFLINE_SHIPS.remove(_ship)
@@ -61,6 +62,7 @@ def eventManager(sio):
         _token = data["token"]
         _ship = Screen.SHIPS[_token]
         Screen.OFFLINE_SHIPS.add(_ship)
+        print("@dis",Screen.OFFLINE_SHIPS)
         _ship.kill()
 
 

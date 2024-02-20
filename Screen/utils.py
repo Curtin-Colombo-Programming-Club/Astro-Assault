@@ -1095,7 +1095,8 @@ class OfflineShips:
             if _ship.token == _token:
                 return _ship
 
-
+    def __str__(self):
+        return str(self.__ships)
 
 
 def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
