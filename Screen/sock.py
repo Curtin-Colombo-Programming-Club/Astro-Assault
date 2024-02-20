@@ -39,6 +39,11 @@ def eventManager(sio):
         _n = data["n"]
         Screen.SHIPS.sockTriggerUpdate(_token=_token, _n=_n)
 
+    @sio.on("player_disconnect", namespace="/game")
+    def on_trigger_update(data):
+        _token = data["token"]
+        Screen.SHIPS[_token].kill()
+
 
 # Connect to the server
 def connect(sio, host="localhost", port=5000):

@@ -93,14 +93,12 @@ class SocketController:
             _player = self.__players[_token]
 
             if _player:
-                _ship = _player.ship
-                _ship.sockTriggerUpdate(_n)
-
                 Server.DISPLAYS.triggerUpdate(
                     {
                         "n": _n,
                         "token": _token
-                    }
+                    },
+                    _player_token=_token
                 )
 
                 returnData["status"] = 200
@@ -134,7 +132,7 @@ class SocketController:
 
             try:
                 _player = self.__player_sessions[request.sid]
-                _player.disconnect()
+                Server.DISPLAYS.playerDisconnect(_player_token=_player.token)
 
                 self.__player_sessions.pop(request.sid, None)
             except KeyError:

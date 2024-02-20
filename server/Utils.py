@@ -148,18 +148,15 @@ class Displays:
     def sockSend(self, _event, _data, _token):
         Server.SOCK.send(_event=_event, _data=_data, _to=_token, _namespace="/game")
 
-    def triggerUpdate(self, _data):
-        [self.sockSend(_event=f"trigger_update", _data=_data, _token=_display.token) for _display in
-         self.__displays.values()]
+    def triggerUpdate(self, _sock_data, _player_token):
+        _player: Player = Server.PLAYERS[_player_token]
+        _display: Display = _player.display
+        self.sockSend(_event="trigger_update", _data=_sock_data, _token=_display.token)
 
     def movementUpdate(self, _sock_data, _player_token):
         _player: Player = Server.PLAYERS[_player_token]
         _display: Display = _player.display
         self.sockSend(_event="movement_update", _data=_sock_data, _token=_display.token)
-
-    def newComponent(self, _component, _data):
-        [self.sockSend(_event=f"new_{_component}", _data=_data, _token=_display.token) for _display in
-         self.__displays.values()]
 
     def joinPlayer(self, _player: Player):
         """
@@ -185,8 +182,16 @@ class Displays:
                     )
                     _display.addPlayer(_player)
                     _player.display = _display
+                    returnState = 1
+                    break
 
         return returnState
+
+    def playerDisconnect(self, _player_token: str):
+        _player: Player = Server.PLAYERS[_player_token]
+        _player.connect()
+        _display: Display = _player.display
+        self.sockSend(_event="player_disconnect", _data={"token": _player_token}, _token=_display.token)
 
     def __getitem__(self, _token):
         return self.__displays[_token]
