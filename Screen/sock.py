@@ -52,12 +52,16 @@ def eventManager(sio):
     @sio.on("player_connect", namespace="/game")
     def on_player_connect(data):
         _token = data["token"]
-        Screen.SHIPS[_token].add(Screen.SHIPS)
+        _ship = Screen.OFFLINE_SHIPS[_token]
+        _ship.add(Screen.SHIPS)
+        Screen.OFFLINE_SHIPS.remove(_ship)
 
     @sio.on("player_disconnect", namespace="/game")
     def on_player_disconnect(data):
         _token = data["token"]
-        Screen.SHIPS[_token].kill()
+        _ship = Screen.SHIPS[_token]
+        Screen.OFFLINE_SHIPS.add(_ship)
+        _ship.kill()
 
 
 # Connect to the server

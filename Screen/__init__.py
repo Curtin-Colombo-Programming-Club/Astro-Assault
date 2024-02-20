@@ -30,6 +30,8 @@ W_RATIO = WIDTH / 1920
 p_W_RATIO = W_RATIO
 C_RATIO = 2 / 3
 
+OFFLINE_SHIPS: OfflineShips | None = None
+
 UNIT_FORCE = 300_000
 DENSITY = 0.0001
 DRAG_FACTOR = 0.05
@@ -38,7 +40,7 @@ sio = socketio.Client()
 
 
 def on_screen_resize():
-    global SHIPS, LASERS, MISSILES, HIT_MARKS, FORCES, GAMERUNNING
+    global SHIPS, OFFLINE_SHIPS, LASERS, MISSILES, HIT_MARKS, FORCES, GAMERUNNING
     SHIPS.on_screen_resize()
     LASERS.on_screen_resize()
     MISSILES.on_screen_resize()
@@ -47,6 +49,7 @@ def on_screen_resize():
 
 def init():
     Screen.SHIPS = Ships()
+    Screen.OFFLINE_SHIPS = OfflineShips()
     Screen.LASERS = Lasers()
     Screen.MISSILES = Missiles()
     Screen.HIT_MARKS = HitMarks()

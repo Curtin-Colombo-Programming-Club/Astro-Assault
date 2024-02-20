@@ -1078,6 +1078,26 @@ class Ships(_Group):
                 return _ship
 
 
+class OfflineShips:
+    def __init__(self):
+        self.__ships = []
+
+    def add(self, _ship: Ship):
+        if _ship not in self.__ships:
+            self.__ships.append(_ship)
+
+    def remove(self, _ship):
+        if _ship in self.__ships:
+            self.__ships.remove(_ship)
+
+    def __getitem__(self, _token):
+        for _ship in self.__ships:
+            if _ship.token == _token:
+                return _ship
+
+
+
+
 def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
     if _TSprite.ship != _TSprite2 and _TSprite.rect.colliderect(_TSprite2.rect):
         try:
