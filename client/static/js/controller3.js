@@ -80,7 +80,7 @@ document.addEventListener('touchend', (event) => {
     if (!_js) {
         isJoystickPressed = false;
         clearInterval(movementInterval);
-        socket.emit("movement", { dx: 0, dy: 0, auth_token: localStorage.token })
+        socket.volatile.emit("movement", { dx: 0, dy: 0, auth_token: localStorage.token })
         joystickHandle.style.transform = `translate(calc(-50%), calc(-50%))`;
         joyx = joyy = joydx = joydy = 0;
         if (joystickWrapper.classList.contains("bad")) {
@@ -113,7 +113,7 @@ function checkOrientation() {
 
 function sendMovement() {
     console.log(joydy);
-    socket.emit("movement", { dx: joydx, dy: joydy, auth_token: localStorage.token }, (ack) => {
+    socket.volatile.emit("movement", { dx: joydx, dy: joydy, auth_token: localStorage.token }, (ack) => {
         if (ack.status == 200) {
             if (!joystickWrapper.classList.contains("good")) {
                 joystickWrapper.classList.add("good");
@@ -134,7 +134,7 @@ function sendMovement() {
 }
 
 function sendTrigger(_n) {
-    socket.emit("trigger", { n: _n, auth_token: localStorage.token }, (ack) => {
+    socket.volatile.emit("trigger", { n: _n, auth_token: localStorage.token }, (ack) => {
         if (ack.status == 200) {
             //
         }
@@ -145,7 +145,7 @@ function sendTrigger(_n) {
 }
 
 function respawn() {
-    socket.emit("respawn", { auth_token: localStorage.token });
+    socket.volatile.emit("respawn", { auth_token: localStorage.token });
 }
 
 function handleJoystickPress(event) {

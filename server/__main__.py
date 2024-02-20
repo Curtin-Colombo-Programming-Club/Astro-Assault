@@ -1,6 +1,7 @@
 import os, sys
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(CURRENT_DIR))
+sys.path.append(fr"{os.path.dirname(CURRENT_DIR)}\Server")
 sys.path.append(fr"{os.path.dirname(CURRENT_DIR)}\Screen")
 
 import Server
@@ -24,6 +25,8 @@ def main():
 
     Server.init()
 
+    Server.C_RATIO
+
     GameThread = threading.Thread(target=Server.game, daemon=True)
     GameThread.start()
 
@@ -31,7 +34,7 @@ def main():
         app=Server.app,
         host=args.host if args.host else "0.0.0.0",
         port=args.port if args.port else 5000,
-        debug=True,
+        debug=False,
         allow_unsafe_werkzeug=True
     )
 

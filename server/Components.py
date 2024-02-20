@@ -5,7 +5,14 @@ import random
 from typing import Self
 import Server
 import numpy as np
+from PIL import Image
 
+"""print(Server.TICK_RATE)
+
+_ship_img = (_img := Image.open(f"{os.path.dirname(__file__)}/images/ship.jpg")).resize((int(_img.width * Server.C_RATIO), int(_img.height * Server.C_RATIO))).convert("L")
+_laser_img = []
+_missile_img = []
+"""
 
 class _StaticComponent:
 
@@ -60,11 +67,10 @@ class _StaticComponent:
         """
         return self._angle
 
-    def __dict__(self):
-        return {
-            "x": self.x,
-            "y": self.y
-        }
+    def __iter__(self):
+        yield "x", self.x
+        yield "y", self.y
+        yield "angle", self.angle
 
 
 class _DynamicComponent(_StaticComponent):
@@ -89,6 +95,10 @@ class _DynamicComponent(_StaticComponent):
         return self._force
 
     @property
+    def drag_force(self) -> "Force":
+        return self._drag_force
+
+    @property
     def mass(self) -> int | float:
         """
         Getter for the mass property.
@@ -110,7 +120,6 @@ class _DynamicComponent(_StaticComponent):
         return tuple(self._velocity)
 
     def update(self, *args, **kwargs) -> Self:
-
         # angle change
         self._angle -= self._d_angle / _tr if (_tr := Server.TICK_RATE) > 0 else 1
         if abs(self._angle) > 180:
@@ -193,12 +202,22 @@ class _DynamicComponent(_StaticComponent):
         # returns self
         return self
 
+    def __iter__(self):
+        for key, value in super().__iter__():
+            yield key, value
+        yield "velocity", self.velocity
+        yield "force", {"value": self.force.value, "angle": self.force.angle}
+        yield "drag_force", {"value": self.drag_force.value, "angle": self.drag_force.angle}
+
 
 class _Group:
 
     def __init__(self):
         self.__components = np.array([], dtype=object)
-        self.__update = np.vectorize(lambda _comp: _comp.update())
+        self.__update = np.vectorize(self.__u)
+
+    def __u(self, _component):
+        _component.update()
 
     @property
     def components(self) -> np.array:
@@ -206,7 +225,7 @@ class _Group:
 
     def add(self, _component: _DynamicComponent | _StaticComponent):
         if _component not in self.components:
-            self.__components = np.append(self.components, _component)
+            self.__components = np.append(self.components, np.array([_component]))
 
     def remove(self, _component):
         self.__components = self.components[self.components != _component]
@@ -216,6 +235,10 @@ class _Group:
             self.__update(self.components)
         except Exception as e:
             pass
+
+    def __iter__(self):
+        for _c in self.components:
+            yield dict(_c)
 
 
 class Laser(_DynamicComponent):
@@ -259,9 +282,15 @@ class Laser(_DynamicComponent):
         self._seconds += 1 / Server.TICK_RATE
 
         if self._seconds > 1:
-            self.kill()
+            Server.LASERS.remove(self)
 
         return self
+
+    def __iter__(self):
+        for key, value in super().__iter__():
+            yield key, value
+        yield "token", self.ship.player.token
+        yield "index", self._index
 
 
 class Missile(_DynamicComponent):
@@ -305,9 +334,14 @@ class Missile(_DynamicComponent):
         self._seconds += 1 / Server.TICK_RATE
 
         if self._seconds > 2:
-            self.kill()
+            Server.MISSILES.remove(self)
 
         return self
+
+    def __iter__(self):
+        for key, value in super().__iter__():
+            yield key, value
+        yield "token", self.ship.player.token
 
 
 class Lasers(_Group):
@@ -487,12 +521,7 @@ class Ship(_DynamicComponent):
         return self._dead
 
     def update(self, *args, **kwargs):
-        # args
-        _screen = kwargs["_screen"]
-
-        # updating force object
-        self.force.angle = self.angle
-        self.force.start = self.center
+        super().update()
 
         # timers
         if self._secondary_timing:
@@ -508,7 +537,7 @@ class Ship(_DynamicComponent):
             self._health -= 10
 
         if self._health <= 0:
-            self.kill()
+            # self.kill()
             self._dead = True
             self._player.died()
 
@@ -532,7 +561,8 @@ class Ship(_DynamicComponent):
         """
         _unit_force = Server.UNIT_FORCE
         _force_factor = _dy if _dy <= 0 else _dy / 2
-        self._force.value = _unit_force * _force_factor
+        self.force.value = _unit_force * _force_factor
+        self.force.angle = self.angle
         # -----
 
         # speed constrains
@@ -559,11 +589,13 @@ class Ship(_DynamicComponent):
                 if self._secondary_chamber == "right":
                     self._secondary_timing = True
 
-    def __dict__(self):
-        _d = super().__dict__()
-        _d["token"] = self.player.token
+    def __iter__(self):
+        for key, value in super().__iter__():
+            yield key, value
 
-        return _d
+        yield "color", self.__color
+        yield "username", self.player.username
+        yield "token", self.player.token
 
     def __str__(self):
         return (f"Ship(\n"
@@ -578,33 +610,31 @@ class Ships(_Group):
 
     def newShip(self, _player, _color) -> Ship:
         # _ship = Ship(_player=_player, _x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT))
-        _ship = Ship(_player=_player, _x=400, _y=0, _color=_color)
+        _ship = Ship(_player=_player,_x=random.randint(0, Server.WIDTH), _y=random.randint(0, Server.HEIGHT), _color=_color)
         self.add(_ship)
 
         return _ship
 
-    def __iter__(self):
-        for _c in self.components:
-            yield dict(_c)
+
+def alpha_positions(_component: _StaticComponent | _DynamicComponent, _img: Image):
+    return_list = []
+    _center = _component.center
+    _img_array = np.array(_img.roate(-_component.angle))
+    _img_center = (int(_img.width/2), int(_img.height/2))
+    return [((_center[0] + x - _img_center[0], _center[1] + y - _img_center[1]) if a else None) for (x, y), a in np.ndenumerate(_img_array)].remove(None)
 
 
-"""def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
-    if _TSprite.ship != _TSprite2 and _TSprite.rect.colliderect(_TSprite2.rect):
-        try:
-            _tc = _TSprite.center
-            _a = \
-                _TSprite2.image.get_at(
-                    (_TSprite.center[0] - _TSprite2.rect.left, _TSprite.center[1] - _TSprite2.rect.top))[
-                    3]
-            if _a:
-                _hm = LaserHit(_x=_tc[0], _y=_tc[1], _angle=_TSprite.angle)
-                Server.HIT_MARKS.add(_hm)
-                _TSprite2.dealDamage(1 if isinstance(_TSprite, Laser) else 2 if isinstance(_TSprite, Missile) else 0)
-                if _TSprite2.dead:
-                    _TSprite.ship.player.killed()
-                return True
-        except IndexError:
-            pass
-    else:
-        return False
-"""
+def check_collision():
+    # Lasers and Missiles
+    for _laser in Server.LASERS.components:
+        for _missie in Server.MISSILES.components:
+            """if _laser."""
+
+    # Laser and Ship
+    for _laser in Server.LASERS.components:
+        for _ship in Server.SHIPS.components:
+            if _laser.center in alpha_positions(_ship, "_ship_img"):
+                _ship.dealDamage(1)
+                # kill laser
+                break
+

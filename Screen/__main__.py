@@ -11,6 +11,7 @@ import argparse
 def main():
     if ctypes.windll.shell32.IsUserAnAdmin() == 0:
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        return 0
 
     parser = argparse.ArgumentParser(description='Description of your program')
 

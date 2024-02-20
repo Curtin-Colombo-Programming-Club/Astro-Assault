@@ -21,9 +21,9 @@ WIDTH = 1280
 HEIGHT = 720
 FULLSCREEN = False
 DRAW_FORCES = False
-H_RATIO = 1
+H_RATIO = HEIGHT / 1080
 p_H_RATIO = H_RATIO
-W_RATIO = 1
+W_RATIO = WIDTH / 1920
 p_W_RATIO = W_RATIO
 C_RATIO = 2 / 3
 
@@ -87,8 +87,7 @@ def run():
         st = time.time()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                Screen.quit()
             elif event.type == pygame.KEYDOWN:
                 # Check if Alt and Enter are pressed simultaneously
                 if event.key == pygame.K_RETURN and pygame.key.get_mods() & pygame.KMOD_ALT:
@@ -155,3 +154,4 @@ def run():
 def quit():
     pygame.quit()
     sio.disconnect()
+    sys.exit()

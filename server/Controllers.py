@@ -148,11 +148,23 @@ class SocketController:
             print(f"Screen disconnected from IP address: {client_address}")
             print("> disconnected, sid:", sid)
 
-            _token = f"player.{token(request.remote_addr)}"
+            _token = f"display.{token(request.remote_addr)}"
             join_room(sid=sid, room=_token)
+
             _d = Server.DISPLAYS.add(_token=_token, _display=Display(_token=_token))
 
             self.__display_sessions[sid] = _d
+
+            Server.SOCK.send(
+                _event="post_connect",
+                _data={
+                    "ships": list(Server.SHIPS),
+                    "lasers": list(Server.LASERS),
+                    "missiles": list(Server.MISSILES)
+                },
+                _to=_token,
+                _namespace="/game"
+            )
 
         @self.__io.on("disconnect", namespace="/game")
         def game_disconnect():

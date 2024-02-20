@@ -96,6 +96,13 @@ class _StaticSprite(pygame.sprite.Sprite):
         """
         return tuple(self._rect.center)
 
+    @center.setter
+    def center(self, _center):
+        if isinstance(_center, (tuple, list)):
+            self.rect.center = _center
+        else:
+            raise ValueError
+
     @property
     def x(self) -> int | float:
         """
@@ -125,6 +132,13 @@ class _StaticSprite(pygame.sprite.Sprite):
             A float representing the current angle of rotation of the sprite.
         """
         return self._angle
+
+    @angle.setter
+    def angle(self, _angle):
+        if isinstance(_angle, (int, float)):
+            self._angle = _angle
+        else:
+            raise ValueError
 
     def _on_screen_resize(self) -> None:
         """
@@ -194,6 +208,16 @@ class _DynamicSprite(_StaticSprite):
         return self._force
 
     @property
+    def drag_force(self) -> "Force":
+        """
+        Getter for the drag force property.
+
+        Returns:
+            An int or float
+        """
+        return self._drag_force
+
+    @property
     def mass(self) -> int | float:
         """
         Getter for the mass property.
@@ -213,6 +237,13 @@ class _DynamicSprite(_StaticSprite):
         Getter for the velocity property.
         """
         return tuple(self._velocity)
+
+    @velocity.setter
+    def velocity(self, _velocity):
+        if isinstance(_velocity, (tuple, list)):
+            self._velocity = list(_velocity)
+        else:
+            raise ValueError
 
     def update(self, *args, **kwargs) -> Self:
         """
@@ -288,8 +319,8 @@ class _DynamicSprite(_StaticSprite):
         _s_y = 0.5 * (_u[1] + _v[1]) * _t
 
         # Update position
-        _x = self.x + _s_x
-        _y = self.y + _s_y
+        _x = self.x + _s_x * Screen.W_RATIO
+        _y = self.y + _s_y * Screen.H_RATIO
 
         if _x < 0:
             _x = Screen.WIDTH
@@ -538,7 +569,7 @@ class Lasers(_Group):
             if isinstance(_laser, Laser):
                 super().add(_laser)
 
-    def newLaser(self, _ship: "Ship") -> Laser:
+    def newLaser(self, _ship: "Ship", _center=None, _angle=None, _index=None) -> Laser:
         """
         Creates a new laser fired from a ship and adds it to the group.
 
@@ -548,19 +579,27 @@ class Lasers(_Group):
         Returns:
             Laser: The newly created laser object.
         """
-        _x_off = 31 * Screen.C_RATIO * Screen.W_RATIO * (-1 if _ship.primary_chamber == "left" else 1)
-        _y_off = 11 * Screen.C_RATIO * Screen.H_RATIO
-        _offset_theta = math.atan2(-_y_off, _x_off)
-        _r = math.sqrt(_x_off ** 2 + _y_off ** 2)
-        _ship_angle = -_ship.angle
+        if not _center:
+            _center = [-1, -1]
+            _x_off = 31 * Screen.C_RATIO * Screen.W_RATIO * (-1 if _ship.primary_chamber == "left" else 1)
+            _y_off = 11 * Screen.C_RATIO * Screen.H_RATIO
+            _offset_theta = math.atan2(-_y_off, _x_off)
+            _r = math.sqrt(_x_off ** 2 + _y_off ** 2)
+            _ship_angle = -_ship.angle
+
+            _center[0] = _ship.x + (_r * math.cos(math.radians(_ship_angle) + _offset_theta))
+            _center[1] = _ship.y + (_r * math.sin(math.radians(_ship_angle) + _offset_theta))
+
+        else:
+            _center = (_center[0] * Screen.W_RATIO, _center[1] * Screen.H_RATIO)
 
         # print("new l", _ship_angle,  _offset_theta)
 
-        _laser = Laser(_x=_ship.x + (_r * math.cos(math.radians(_ship_angle) + _offset_theta)),
-                       _y=_ship.y + (_r * math.sin(math.radians(_ship_angle) + _offset_theta)),
-                       _angle=_ship.angle,
+        _laser = Laser(_x=_center[0],
+                       _y=_center[1],
+                       _angle=_angle if _angle else _ship.angle,
                        _ship=_ship,
-                       _index=2 if _ship.primary_3_counter == 3 else 1)
+                       _index=_index if _index else 2 if _ship.primary_3_counter == 3 else 1)
         self.add(_laser)
 
         return _laser
@@ -818,8 +857,12 @@ class Forces:
 
 
 class Ship(_DynamicSprite):
-    def __init__(self, _x, _y, _token, _color=(0, 0, 255), _username="NoUsErNaMe"):
-        super().__init__(_img_path=os.path.relpath(f"{os.path.dirname(__file__)}/images/ship.svg"), _center=(_x, _y))
+    def __init__(self, _x, _y, _token, _color=(0, 0, 255), _username="NoUsErNaMe", _angle=0):
+        super().__init__(
+            _img_path=os.path.relpath(f"{os.path.dirname(__file__)}/images/ship.svg"),
+            _center=(_x, _y),
+            _angle=_angle
+        )
 
         self.__color = _color
         self.__username = _username
@@ -871,6 +914,18 @@ class Ship(_DynamicSprite):
     @property
     def username(self):
         return self.__username
+
+    @property
+    def color(self) -> tuple:
+        return tuple(self.__color)
+
+    @color.setter
+    def color(self, _color):
+        if isinstance(_color, (tuple, list)) and len(_color) == 3:
+            self.__color = _color
+            self.__set_player_color()
+        else:
+            raise ValueError
 
     @property
     def primary_chamber(self):
@@ -977,19 +1032,31 @@ class Ships(_Group):
         super().__init__(_ships)
 
     @property
-    def ships(self):
+    def ships(self) -> list[Ship]:
         return self.sprites()
 
     def add(self, *_ships):
-        print("@add", _ships)
         for _ship in _ships:
             if isinstance(_ship, Ship):
                 super().add(_ship)
 
-    def new(self, _token, _color, _x, _y, _username) -> Ship:
-        # _ship = Ship(_player=_player, _x=random.randint(0, GLOBALS.WIDTH), _y=random.randint(0, GLOBALS.HEIGHT))
-        _ship = Ship(_token=_token, _x=_x * Screen.W_RATIO, _y=_y * Screen.H_RATIO, _color=_color, _username=_username)
-        self.add(_ship)
+    def new(self, _token, _color, _x, _y, _username, _angle=0) -> Ship:
+        _ship = None
+        for _s in self.ships:
+            if _s.token == _token:
+                _ship = _s
+                break
+
+        if not _ship:
+            _ship = Ship(
+                _token=_token,
+                _x=_x * Screen.W_RATIO,
+                _y=_y * Screen.H_RATIO,
+                _color=_color,
+                _username=_username,
+                _angle=_angle
+            )
+            self.add(_ship)
 
         return _ship
 
@@ -1004,6 +1071,11 @@ class Ships(_Group):
             if _ship.token == _token:
                 _ship.triggerUpdate(_n=_n)
                 break
+
+    def __getitem__(self, _token):
+        for _ship in self.ships:
+            if _ship.token == _token:
+                return _ship
 
 
 def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
