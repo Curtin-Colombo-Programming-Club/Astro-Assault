@@ -64,15 +64,14 @@ class SocketController:
             _player = self.__players[_token]
 
             if _player:
-                _ship = _player.ship
-                _ship.sockMoveUpdate(_dx, _dy)
 
                 Server.DISPLAYS.movementUpdate(
-                    {
+                    _sock_data={
                         "dx": _dx,
                         "dy": _dy,
                         "token": _token
-                    }
+                    },
+                    _player_token=_token
                 )
 
                 returnData["status"] = 200
@@ -145,30 +144,24 @@ class SocketController:
         def game_connect():
             client_address = request.remote_addr
             sid = request.sid
-            print(f"Screen disconnected from IP address: {client_address}")
-            print("> disconnected, sid:", sid)
+            print(f"Screen connected from IP address: {client_address}")
+            print("> connected, sid:", sid)
 
             _token = f"display.{token(request.remote_addr)}"
             join_room(sid=sid, room=_token)
 
-            _d = Server.DISPLAYS.add(_token=_token, _display=Display(_token=_token))
+            _d = Server.DISPLAYS.new(_token=_token)
 
             self.__display_sessions[sid] = _d
 
-            Server.SOCK.send(
-                _event="post_connect",
-                _data={
-                    "ships": list(Server.SHIPS),
-                    "lasers": list(Server.LASERS),
-                    "missiles": list(Server.MISSILES)
-                },
-                _to=_token,
-                _namespace="/game"
-            )
+            print("@connect")
 
         @self.__io.on("disconnect", namespace="/game")
         def game_disconnect():
+            client_address = request.remote_addr
             sid = request.sid
+            print(f"Screen disconnected from IP address: {client_address}")
+            print("> disconnected, sid:", sid)
             _d = self.__display_sessions[sid]
             Server.DISPLAYS.remove(_d.token)
             self.__display_sessions.pop(sid, None)
@@ -205,16 +198,7 @@ class HTTPController:
                     _color=_color
                 )
 
-                Server.DISPLAYS.newComponent(
-                    "ship",
-                    {
-                        "x": _player.ship.x,
-                        "y": _player.ship.y,
-                        "username": _username,
-                        "color": _color,
-                        "token": _token
-                    }
-                )
+                Server.DISPLAYS.joinPlayer(_player=_player)
 
                 _expiration_time = datetime.datetime.now() + datetime.timedelta(days=1)
                 response = make_response(jsonify({'auth_token': _token, 'username': _username}))

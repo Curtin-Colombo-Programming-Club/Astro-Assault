@@ -25,11 +25,6 @@ def main():
 
     Server.init()
 
-    Server.C_RATIO
-
-    GameThread = threading.Thread(target=Server.game, daemon=True)
-    GameThread.start()
-
     Server.socketio.run(
         app=Server.app,
         host=args.host if args.host else "0.0.0.0",

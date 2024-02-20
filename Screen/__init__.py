@@ -1,4 +1,6 @@
 import pygame
+
+import Screen
 from Screen.utils import *
 import sys
 import time
@@ -83,6 +85,7 @@ def run():
     # Main game loop
     clk = pygame.time.Clock()
     last_tick_time = pygame.time.get_ticks()
+    _start = time.time()
     while True:
         st = time.time()
         for event in pygame.event.get():
@@ -104,11 +107,16 @@ def run():
                 if event.key == pygame.K_f and pygame.key.get_mods() & (pygame.KMOD_LSHIFT or pygame.KMOD_RSHIFT):
                     Screen.DRAW_FORCES = not Screen.DRAW_FORCES
 
+        _end = time.time()
+        _elapsed = _end - _start
+        _start = _end
         current_tick_time = pygame.time.get_ticks()
         elapsed_time = current_tick_time - last_tick_time
+        last_tick_time = current_tick_time
         Screen.ELAPSED_TIME = elapsed_time
-        Screen.TICK_RATE = 1000/elapsed_time if elapsed_time > 0 else 1
-        # Update game logic here
+
+        # print(Screen.ELAPSED_TIME)
+        Screen.TICK_RATE = 1/_elapsed if _elapsed > 0 else 1
 
         # Clear the screen
         screen.fill(black)
@@ -146,9 +154,7 @@ def run():
 
         # Control the frame rate
         clk.tick(200)
-        #print("fps", 1/(time.time()-st))
-
-        last_tick_time = current_tick_time
+        # print("fps", 1/(time.time()-st))
 
 
 def quit():

@@ -5,7 +5,6 @@ import time
 import pygame
 from typing import Self
 import Server
-from Server.components import *
 
 
 class Player:
@@ -15,10 +14,22 @@ class Player:
 
         self.__token = _token
         self.__username = _username
-
-        self.__ship: Ship = Server.SHIPS.newShip(_player=self, _color=_color)
+        self.__display = None
         self.__kills = 0
         self.__deaths = 0
+        self.__color = _color
+
+    @property
+    def display(self):
+        return self.__display
+
+    @display.setter
+    def display(self, _display):
+        self.__display = _display
+
+    @property
+    def color(self):
+        return self.__color
 
     @property
     def online(self):
@@ -36,20 +47,13 @@ class Player:
     def username(self):
         return self.__username
 
-    @property
-    def ship(self):
-        return self.__ship
-
     def connect(self):
         self.__online = True
         self.__lastOnline = datetime.datetime.now()
-        if not self.ship.dead:
-            Server.SHIPS.add(self.ship)
 
     def disconnect(self):
         self.__online = False
         self.__lastOnline = datetime.datetime.now()
-        Server.SHIPS.remove(self.ship)
 
     def sockSend(self, _event, _data):
         Server.SOCK.send(_event=_event, _data=_data, _to=self.token, _namespace="/")
@@ -96,12 +100,25 @@ class Players:
 
 
 class Display:
-    def __init__(self, _token: str):
+    def __init__(self, _token: str, _index: int):
         self.__token = _token
+        self.__name = f"Astro-Assault-{_index}"
+        self.__players = {}
 
     @property
     def token(self):
         return self.__token
+
+    @property
+    def players(self):
+        return self.__players
+
+    @property
+    def count(self):
+        return len(self.players.values())
+
+    def addPlayer(self, _player: "Player"):
+        self.__players[_player.token] = _player
 
 
 class Displays:
@@ -109,12 +126,21 @@ class Displays:
         self.__displays = {}
 
     @property
-    def displays(self):
-        return self.__displays
+    def displays(self) -> list[Display]:
+        return list(self.__displays.values())
+
+    @property
+    def count(self):
+        return len(self.displays)
 
     def add(self, _token, _display: Display):
         self.__displays[_token] = _display
         return _display
+
+    def new(self, _token):
+        self.__displays[_token] = Display(_token=_token, _index=self.count + 1)
+
+        return self.__displays[_token]
 
     def remove(self, _token):
         self.__displays.pop(_token, None)
@@ -123,14 +149,44 @@ class Displays:
         Server.SOCK.send(_event=_event, _data=_data, _to=_token, _namespace="/game")
 
     def triggerUpdate(self, _data):
-        [self.sockSend(_event=f"trigger_update", _data=_data, _token=_display.token) for _display in self.__displays.values()]
+        [self.sockSend(_event=f"trigger_update", _data=_data, _token=_display.token) for _display in
+         self.__displays.values()]
 
-    def movementUpdate(self, _data):
-        [self.sockSend(_event=f"movement_update", _data=_data, _token=_display.token) for _display in self.__displays.values()]
+    def movementUpdate(self, _sock_data, _player_token):
+        _player: Player = Server.PLAYERS[_player_token]
+        _display: Display = _player.display
+        self.sockSend(_event="movement_update", _data=_sock_data, _token=_display.token)
 
     def newComponent(self, _component, _data):
-        [self.sockSend(_event=f"new_{_component}", _data=_data, _token=_display.token) for _display in self.__displays.values()]
+        [self.sockSend(_event=f"new_{_component}", _data=_data, _token=_display.token) for _display in
+         self.__displays.values()]
+
+    def joinPlayer(self, _player: Player):
+        """
+        state:
+            0 - no displays
+            1 - joined
+            2 - full
+        """
+        returnState = 0
+
+        if self.count:
+            returnState = 2
+            for _display in self.displays:
+                if _display.count < 5:  # max play per display is 5
+                    self.sockSend(
+                        _event="new_ship",
+                        _data={
+                            "username": _player.username,
+                            "color": _player.color,
+                            "token": _player.token
+                        },
+                        _token=_display.token
+                    )
+                    _display.addPlayer(_player)
+                    _player.display = _display
+
+        return returnState
 
     def __getitem__(self, _token):
         return self.__displays[_token]
-
