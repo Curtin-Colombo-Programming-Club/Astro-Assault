@@ -1,5 +1,3 @@
-import pygame
-
 import Screen
 from Screen.utils import *
 import sys
@@ -85,8 +83,9 @@ def run():
     Screen.W_RATIO = Screen.WIDTH / 1920
     print(Screen.WIDTH, Screen.HEIGHT)
 
-    # Set up font
-    font = pygame.font.Font(None, 45)  # You can choose your own font and size
+    # Set up fps_font
+    fps_font = pygame.font.Font(None, 45)
+    name_font = pygame.font.Font(None, 60)
 
     # Main game loop
     clk = pygame.time.Clock()
@@ -152,14 +151,23 @@ def run():
         Screen.FPS = clk.get_fps()
 
         # Render FPS text
-        fps_text = pygame.transform.scale(_im := font.render(str(int(Screen.FPS)), True, (0, 255, 10)), (_im.get_width() * Screen.W_RATIO * Screen.C_RATIO, _im.get_height() * Screen.H_RATIO * Screen.C_RATIO))
+        fps_text = pygame.transform.scale(_im := fps_font.render(str(int(Screen.FPS)), True, (0, 255, 10)), (_im.get_width() * Screen.W_RATIO * Screen.C_RATIO, _im.get_height() * Screen.H_RATIO * Screen.C_RATIO))
         screen.blit(fps_text, (10, 10))  # Adjust position as needed
+
+        name_text = pygame.transform.scale(
+            _im := name_font.render(Screen.NAME, True, (155, 155, 155)),
+            (
+                (_width := _im.get_width() * Screen.W_RATIO * Screen.C_RATIO),
+                _im.get_height() * Screen.H_RATIO * Screen.C_RATIO
+            )
+        )
+        screen.blit(name_text, ((Screen.WIDTH / 2) - (_width / 2), 10))
 
         # Update the display
         pygame.display.update()
 
         # Control the frame rate
-        clk.tick(200)
+        clk.tick(300)
         # print("fps", 1/(time.time()-st))
 
 

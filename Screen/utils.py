@@ -1,9 +1,11 @@
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+
 import math
 import os
 import pygame
 import random
 from typing import Self
-
 import Screen
 
 

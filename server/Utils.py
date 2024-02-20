@@ -2,7 +2,6 @@ import datetime
 import math
 import random
 import time
-import pygame
 from typing import Self
 import Server
 

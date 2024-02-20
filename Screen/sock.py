@@ -13,7 +13,6 @@ def eventManager(sio):
     @sio.on("post_connect", namespace="/game")
     def on_post_connect(data):
         Screen.NAME = data["name"]
-        print('Connected to server')
 
     @sio.event
     def on_disconnect():
