@@ -115,6 +115,7 @@ class SocketController:
 
             if _player:
                 # respawn
+                Server.DISPLAYS.playerRespawn(_player_token=_token)
                 returnData["status"] = 200
                 returnData["message"] = "success!"
             else:
@@ -187,7 +188,7 @@ class HTTPController:
                 _token = request.cookies.get('auth_token', None)
                 _player = self.__players[_token]
                 if _player:
-                    return render_template("controller3.html")
+                    return render_template("controller.html")
                 else:
                     return render_template("start.html")
             elif request.method == "POST":

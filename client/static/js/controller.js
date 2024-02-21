@@ -150,7 +150,7 @@ function sendTrigger(_n) {
 }
 
 function respawn() {
-    socket.volatile.emit("respawn", { auth_token: localStorage.token });
+    socket.volatile.emit("respawn", { auth_token: localStorage.auth_token });
 }
 
 function handleJoystickPress(event) {

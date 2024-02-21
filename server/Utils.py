@@ -202,6 +202,11 @@ class Displays:
 
         return returnState
 
+    def playerRespawn(self, _player_token: str):
+        _player: Player = Server.PLAYERS[_player_token]
+        _display: Display = _player.display
+        self.sockSend(_event="player_respawn", _data={"token": _player_token}, _token=_display.token)
+
     def playerConnect(self, _player_token: str):
         _player: Player = Server.PLAYERS[_player_token]
         _player.connect()
