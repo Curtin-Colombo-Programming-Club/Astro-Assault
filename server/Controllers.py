@@ -202,14 +202,19 @@ class HTTPController:
                     _color=_color
                 )
 
-                Server.DISPLAYS.joinPlayer(_player=_player)
+                _state = Server.DISPLAYS.joinPlayer(_player=_player)
 
-                _expiration_time = datetime.datetime.now() + datetime.timedelta(days=1)
-                response = make_response(jsonify({'auth_token': _token, 'username': _username}))
-                response.set_cookie(key='auth_token', value=_token, path="/", expires=_expiration_time)
-                response.set_cookie(key='username', value=_username, path="/", expires=_expiration_time)
-                response.set_cookie(key='login_status', value='true', path="/", expires=_expiration_time)
-                response.status = 200
+                if _state == 1:
+                    _expiration_time = datetime.datetime.now() + datetime.timedelta(days=1)
+                    response = make_response(jsonify({'auth_token': _token, 'username': _username}))
+                    response.set_cookie(key='auth_token', value=_token, path="/", expires=_expiration_time)
+                    response.set_cookie(key='username', value=_username, path="/", expires=_expiration_time)
+                    response.set_cookie(key='login_status', value='true', path="/", expires=_expiration_time)
+                    response.status = 200
+                else:
+                    self.__players.remove(_player=_player)
+                    response = make_response(jsonify({'message': "Server Full!" if _state else "No Displays!"}))
+                    response.status = 503
 
                 return response
 

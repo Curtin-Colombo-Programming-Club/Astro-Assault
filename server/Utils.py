@@ -102,6 +102,9 @@ class Players:
 
         return _player
 
+    def remove(self, _player: Player):
+        self.__players.pop(_player.token, None)
+
     def __getitem__(self, _token) -> Player:
         return self.__players.get(_token, None)
 

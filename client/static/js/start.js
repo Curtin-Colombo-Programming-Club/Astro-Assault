@@ -141,12 +141,23 @@ function sendData(_username, _color) {
         method: 'POST',
         body: formData
     })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data); // Log the response data
-            localStorage.auth_token = data.auth_token;
-            localStorage.username = data.username;
-            window.location.href = "/";
+        .then(response => {
+            if (response.status === 200) {
+                response.json()
+                .then(data=>{
+                    confirm.log(data);
+                    localStorage.auth_token = data.auth_token;
+                    localStorage.username = data.username;
+                    window.location.href = "/";
+                });
+            }
+            else if (response.status === 503) {
+                response.json()
+                .then(data=>{
+                    console.log(data);
+                    alert(data.message);
+                });
+            }
         })
         .catch(error => {
             console.error('Error:', error);
