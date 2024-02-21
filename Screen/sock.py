@@ -1,5 +1,7 @@
 import json
 import random
+import time
+from datetime import datetime
 
 import Screen
 
@@ -13,10 +15,16 @@ def eventManager(sio):
     @sio.on("post_connect", namespace="/game")
     def on_post_connect(data):
         Screen.NAME = data["name"]
+        Screen.TOKEN = data["token"]
 
     @sio.event
     def on_disconnect():
         print('Disconnected from server')
+
+    @sio.on("pong", namespace="/game")
+    def on_pong(data):
+        print(data)
+        Screen.PING = time.time() - float(data["start"])
 
     @sio.on('new_ship', namespace='/game')
     def on_new_ship(data):

@@ -16,6 +16,54 @@ body {
     font-family: 'Open Sans', sans-serif;
 }
 
+.overlay-container {
+    position: absolute;
+    display: none;
+    visibility: hidden;
+    z-index: -1;
+    width: 100vw;
+    height: 100vh;
+    z-index: 500;
+    background-color: rgba(0, 0, 0, 0.638);
+    backdrop-filter: blur(10px);
+}
+
+.overlay-container.a {
+    display: block;
+    visibility: visible;
+    z-index: 1000;
+}
+
+.overlay {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    color: white;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.overlay span {
+    font-size: 20px;
+    font-weight: 900;
+    z-index: 2000;
+}
+
+.overlay button {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    outline: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: 900;
+    z-index: 2000;
+}
+
 .field-group {
     width: 70%;
     min-width: 350px;

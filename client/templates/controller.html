@@ -13,9 +13,12 @@
 
 <body>
     <div class="overlay-container">
-        <div class="overlay">
+        <div class="overlay" id="orientation-overlay">
             <img src="/static/images/rotate-device.svg" alt="">
             <span>rotate your device!</span>
+        </div>
+        <div class="overlay" id="settings-overlay">
+            <span>Settings</span>
         </div>
     </div>
     <main id="main">
@@ -38,9 +41,9 @@
                 </div>
             </div>
             <div class="vertical-buttons">
-                <button class="middle-button" id="middle-button-1"></button>
-                <button class="middle-button" id="middle-button-2"></button>
-                <button class="middle-button" id="middle-button-3"></button>
+                <button class="middle-button" id="settings"></button>
+                <button class="middle-button" id="respawn"></button>
+                <button class="middle-button" id="fullscreen"></button>
             </div>
         </div>
 

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import Screen
 from Screen.utils import *
 import sys
@@ -9,6 +11,7 @@ import os
 
 
 NAME: str = ""
+TOKEN: str = ""
 SHIPS: Ships | None = None
 LASERS: Lasers | None = None
 MISSILES: Missiles | None = None
@@ -16,6 +19,7 @@ HIT_MARKS: HitMarks | None = None
 FORCES: Forces | None = None
 GAMERUNNING = None
 FPS = 0
+PING = -1
 ELAPSED_TIME = 1
 TICK_RATE = 1
 WIDTH = 1280
@@ -91,6 +95,7 @@ def run():
     clk = pygame.time.Clock()
     last_tick_time = pygame.time.get_ticks()
     _start = time.time()
+    _ping_repeat_tracker = 0
     while True:
         st = time.time()
         for event in pygame.event.get():
@@ -119,9 +124,10 @@ def run():
         elapsed_time = current_tick_time - last_tick_time
         last_tick_time = current_tick_time
         Screen.ELAPSED_TIME = elapsed_time
+        _ping_repeat_tracker += elapsed_time / 1000
 
         # print(Screen.ELAPSED_TIME)
-        Screen.TICK_RATE = 1/_elapsed if _elapsed > 0 else 1
+        Screen.TICK_RATE = 1000/elapsed_time if elapsed_time > 0 else 1
 
         # Clear the screen
         screen.fill(black)
@@ -151,9 +157,13 @@ def run():
         Screen.FPS = clk.get_fps()
 
         # Render FPS text
-        fps_text = pygame.transform.scale(_im := fps_font.render(str(int(Screen.FPS)), True, (0, 255, 10)), (_im.get_width() * Screen.W_RATIO * Screen.C_RATIO, _im.get_height() * Screen.H_RATIO * Screen.C_RATIO))
-        screen.blit(fps_text, (10, 10))  # Adjust position as needed
+        fps_text = pygame.transform.scale(_im := fps_font.render(f"fps {str(int(Screen.FPS))}", True, (0, 255, 10)), (_im.get_width() * Screen.W_RATIO * Screen.C_RATIO, _im.get_height() * Screen.H_RATIO * Screen.C_RATIO))
+        fps_rect = fps_text.get_rect()
+        fps_rect.left = 10 * Screen.W_RATIO
+        fps_rect.top = 10 * Screen.H_RATIO
+        screen.blit(fps_text, fps_rect)  # Adjust position as needed
 
+        # Render name text
         name_text = pygame.transform.scale(
             _im := name_font.render(Screen.NAME, True, (155, 155, 155)),
             (
@@ -161,7 +171,31 @@ def run():
                 _im.get_height() * Screen.H_RATIO * Screen.C_RATIO
             )
         )
-        screen.blit(name_text, ((Screen.WIDTH / 2) - (_width / 2), 10))
+        name_rect = name_text.get_rect()
+        name_rect.centerx = Screen.WIDTH / 2
+        name_rect.top = 10 * Screen.H_RATIO
+        screen.blit(name_text, name_rect)
+
+        # Render ping text
+        if _ping_repeat_tracker >= 1:
+            print("ping sending")
+            _ping_repeat_tracker = 0
+            Screen.sio.emit("ping", {"start": str(time.time()), "token": Screen.TOKEN}, namespace="/game")
+        ping_text = pygame.transform.scale(
+            _im := fps_font.render(
+                f"{int(Screen.PING)}ms",
+                True,
+                (0, 255, 0) if Screen.PING <= 60 else (255, 255, 0) if Screen.PING <= 120 else (255, 0, 0)
+            ),
+            (
+                (_width := _im.get_width() * Screen.W_RATIO * Screen.C_RATIO),
+                _im.get_height() * Screen.H_RATIO * Screen.C_RATIO
+            )
+        )
+        ping_rect = ping_text.get_rect()
+        ping_rect.right = Screen.WIDTH - 10 * Screen.W_RATIO
+        ping_rect.top = 10 * Screen.H_RATIO
+        screen.blit(ping_text, ping_rect)
 
         # Update the display
         pygame.display.update()

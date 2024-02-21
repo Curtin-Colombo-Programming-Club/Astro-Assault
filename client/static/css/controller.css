@@ -14,6 +14,8 @@
 }
 
 .overlay {
+    display: none;
+    visibility: hidden;
     position: absolute;
     width: 100vw;
     height: 100vh;
@@ -25,6 +27,12 @@
     justify-content: center;
 }
 
+.overlay.a{
+    display: flex;
+    visibility: visible;
+    
+}
+
 .overlay img {
     aspect-ratio: 1 / 1;
     width: 40%;
@@ -33,6 +41,18 @@
 
 .overlay span {
     padding-top: 20px;
+    font-size: 20px;
+    font-weight: 900;
+    z-index: 2000;
+}
+
+.overlay button {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    outline: none;
+    border: none;
+    cursor: pointer;
     font-size: 20px;
     font-weight: 900;
     z-index: 2000;
@@ -220,7 +240,7 @@ main.portrait {
     margin-bottom: 15px;
 }
 
-#middle-button-1 {
+#settings {
     top: 20%;
     background-image: url(/static/images/settings.png);
     background-position: center;
@@ -228,7 +248,7 @@ main.portrait {
     background-repeat: no-repeat;
 }
 
-#middle-button-2 {
+#respawn {
     top: 20%;
     background-image: url(/static/images/refresh.png);
     background-position: center;
@@ -236,7 +256,7 @@ main.portrait {
     background-repeat: no-repeat;
 }
 
-#middle-button-3 {
+#fullscreen {
     top: 20%;
     background-image: url(/static/images/fullscreen.png);
     background-position: center;

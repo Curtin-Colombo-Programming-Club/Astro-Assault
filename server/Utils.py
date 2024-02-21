@@ -87,8 +87,18 @@ class Players:
         self.add(_players)
 
     @property
-    def players(self) -> dict:
+    def players(self) -> dict[str,Player]:
         return self.__players
+
+    @property
+    def first_disconnected_player(self) -> Player | None:
+        _return_player = None
+        for _player in self.players.values():
+            if not _player.online and _return_player is None:
+                _return_player = _player
+            elif not _player.online and _player.lastOnline < _return_player.lastOnline:
+                _return_player = _player
+        return _return_player
 
     def add(self, *_players):
         for _player in _players:
@@ -124,15 +134,20 @@ class Display:
         return self.__token
 
     @property
-    def players(self):
-        return self.__players
+    def players(self) -> list[Player]:
+        return list(self.__players.values())
 
     @property
     def count(self):
-        return len(self.players.values())
+        return len(self.players)
 
     def addPlayer(self, _player: "Player"):
         self.__players[_player.token] = _player
+        _player.display = self
+
+    def removePlayer(self, _player: Player):
+        self.__players.pop(_player.token, None)
+        _player.display = None
 
 
 class Displays:
@@ -155,7 +170,7 @@ class Displays:
         self.__displays[_token] = Display(_token=_token, _index=self.count + 1)
         self.sockSend(
             _event="post_connect",
-            _data={"name": self.__displays[_token].name},
+            _data={"name": self.__displays[_token].name, "token": _token},
             _token=_token
         )
         return self.__displays[_token]
@@ -199,9 +214,15 @@ class Displays:
                         _token=_display.token
                     )
                     _display.addPlayer(_player)
-                    _player.display = _display
                     returnState = 1
                     break
+
+            if returnState == 2 and (time.time() - (_disconnected_player := Server.PLAYERS.first_disconnected_player).lastOnline) >= 10:
+                _display = _disconnected_player.display
+                _display.removePlayer(_disconnected_player)
+                _display.addPlayer(_player)
+                Server.PLAYERS.remove(_disconnected_player)
+                returnState = 1
 
         return returnState
 

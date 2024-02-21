@@ -148,6 +148,10 @@ class SocketController:
 
             self.__display_sessions[sid] = _d
 
+        @self.__io.on("ping", namespace="/game")
+        def game_ping(data):
+            emit("pong", data, namespace="/game", to=data["token"])
+
         @self.__io.on("player_died", namespace="/game")
         def player_dead(data):
             _player_token = data["token"]

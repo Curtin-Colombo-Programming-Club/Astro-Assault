@@ -1,6 +1,7 @@
 // vars
 var joyx = 0, joyy = 0, joydx = 0, joydy = 0, movementInterval;
 var isJoystickPressed = false, joystickTouch = null;
+var settingsOverlay = false;
 
 // DOM elements
 const main = document.getElementById("main");
@@ -12,9 +13,9 @@ const joystickWrapper = document.getElementById("joy-stick-wrapper");
 const joystickContainer = document.getElementById('joy-stick-container');
 const joystickHandle = document.getElementById('joy-stick-thumb');
 
-const settings_btn = document.getElementById("middle-button-1");
-const respawn_btn = document.getElementById("middle-button-2");
-const fullscreen_btn = document.getElementById("middle-button-3");
+const settings_btn = document.getElementById("settings");
+const respawn_btn = document.getElementById("respawn");
+const fullscreen_btn = document.getElementById("fullscreen");
 
 const button1 = document.getElementById("button-1");
 const button2 = document.getElementById("button-2");
@@ -42,30 +43,49 @@ socket.on("kds", (data) => {
 // DOM listners
 window.addEventListener('resize', checkOrientation);
 
+settings_btn.addEventListener("click", ()=>{console.log("settings")})
+
 joystickHandle.addEventListener('mousedown', handleJoystickPress);
 main.addEventListener('touchstart', (event) => {
     event.preventDefault();
     let touches = event.touches;
     console.log("touch start", touches);
+
     for (const touch of touches) {
-        if (touch.target.id === "joy-stick-thumb" && !isJoystickPressed) {
-            isJoystickPressed = true;
-            movementInterval = setInterval(sendMovement, 10);
-        }
-        else if (touch.target.id === "button-1") {
-            sendTrigger(1);
-        }
-        else if (touch.target.id === "button-2") {
-            sendTrigger(2);
-        }
-        else if (touch.target.id === "button-3") {
-            sendTrigger(3);
-        }
-        else if (touch.target.id === "middle-button-2") {
-            respawn();
-        }
-        else if (touch.target.id === "middle-button-3") {
-            toggleFullScreen();
+        switch (touch.target.id) {
+            case "joy-stick-thumb":
+                if (!isJoystickPressed) {
+                    isJoystickPressed = true;
+                    movementInterval = setInterval(sendMovement, 10);
+                }
+                break;
+
+            case "button-1":
+                sendTrigger(1);
+                break;
+
+            case "button-2":
+                sendTrigger(2);
+                break;
+
+            case "button-3":
+                sendTrigger(3);
+                break;
+
+            case "settings":
+                toggleSettings();
+                break;
+
+            case "respawn":
+                respawn()
+                break;
+
+            case "fullscreen":
+                toggleFullScreen();
+                break;
+        
+            default:
+                break;
         }
     }
 });
@@ -101,15 +121,30 @@ document.addEventListener('mousemove', handleJoystickMove);
 document.addEventListener('touchmove', handleJoystickMove);
 
 // functions
+function toggleSettings() {
+    settingsOverlay != settingsOverlay;
+    if (settingsOverlay) {
+        console.log("Showing settings...");
+        document.querySelector(".overlay-container").classList.add('x');
+        document.getElementById("settings-overlay").classList.remove('a');
+    } else {
+        console.log("Closing settings...");
+        document.querySelector(".overlay-container").classList.remove('x');
+        document.getElementById("settings-overlay").classList.add('a');
+    }
+}
+
 function checkOrientation() {
     if (window.innerWidth > window.innerHeight) {
         console.log("Landscape orientation");
         document.querySelector(".overlay-container").classList.add('x');
+        document.getElementById("orientation-overlay").classList.remove('a');
         // Your code for landscape orientation
         main.classList.remove("portrait")
     } else {
         console.log("Portrait orientation");
         document.querySelector(".overlay-container").classList.remove('x');
+        document.getElementById("orientation-overlay").classList.add('a');
         // Your code for portrait orientation
         main.classList.add("portrait");
         //main.style.left = `${(window.innerWidth - window.innerHeight) / 2}px`

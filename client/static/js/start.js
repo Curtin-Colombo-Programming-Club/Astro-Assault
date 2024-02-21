@@ -3,6 +3,10 @@ const username = document.getElementById("username");
 const hueThumb = document.querySelector(".hue-thumb");
 const hueSlider = document.querySelector(".hue-slider");
 const start = document.getElementById("start");
+const erm = document.getElementById("erm");
+const retry = document.getElementById("retry");
+
+let _username, _color;
 
 // vars
 var rgb = [255, 0, 0];
@@ -20,6 +24,7 @@ document.addEventListener("mousemove", handleMouseMove);
 document.addEventListener("mouseup", handleMouseUp);
 //
 start.addEventListener("click", sendData);
+retry.addEventListener("click", sendData);
 
 // Function to handle mouse down event on the thumb
 function handleMouseDown(event) {
@@ -145,7 +150,8 @@ function sendData(_username, _color) {
             if (response.status === 200) {
                 response.json()
                 .then(data=>{
-                    confirm.log(data);
+                    console.log(data);
+                    document.querySelector(".overlay-container").classList.remove('a');
                     localStorage.auth_token = data.auth_token;
                     localStorage.username = data.username;
                     window.location.href = "/";
@@ -155,7 +161,8 @@ function sendData(_username, _color) {
                 response.json()
                 .then(data=>{
                     console.log(data);
-                    alert(data.message);
+                    document.querySelector(".overlay-container").classList.add('a');
+                    erm.innerText = data.message;
                 });
             }
         })

@@ -1,29 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Onboarding</title>
+    <link
+      rel="shortcut icon"
+      href="/static/images/icon.ico"
+      type="image/x-icon"
+    />
+    <link rel="stylesheet" href="/static/css/common.css" />
+    <link rel="stylesheet" href="/static/css/start.css" />
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Onboarding</title>
-  <link rel="shortcut icon" href="/static/images/icon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="/static/css/common.css">
-  <link rel="stylesheet" href="/static/css/start.css">
-</head>
-
-<body>
-  <div class="field-group">
-    <input type="text" name="username" id="username" class="input-field" placeholder="Enter Name" autocomplete="off">
-    <label for="username" class="input-label"> Enter Name</label>
-  </div>
-  <div class="color-picker">
-    <div class="hue-slider">
-      <div class="hue-thumb"></div>
+  <body>
+    <div class="overlay-container">
+      <div class="overlay">
+        <span id="erm">Error</span>
+        <button id="retry">Retry</button>
+      </div>
     </div>
-  </div>
-  <div class="button-container">
-    <div class="button" id="start">Start</div>
-  </div>
-  <script src="/static/js/start.js"></script>
-</body>
-
+    <div class="field-group">
+      <input
+        type="text"
+        name="username"
+        id="username"
+        class="input-field"
+        placeholder="Enter Name"
+        autocomplete="off"
+      />
+      <label for="username" class="input-label"> Enter Name</label>
+    </div>
+    <div class="color-picker">
+      <div class="hue-slider">
+        <div class="hue-thumb"></div>
+      </div>
+    </div>
+    <div class="button-container">
+      <div class="button" id="start">Start</div>
+    </div>
+    <script src="/static/js/start.js"></script>
+  </body>
 </html>
