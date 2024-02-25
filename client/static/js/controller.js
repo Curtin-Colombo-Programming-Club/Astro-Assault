@@ -13,7 +13,10 @@ const joystickWrapper = document.getElementById("joy-stick-wrapper");
 const joystickContainer = document.getElementById('joy-stick-container');
 const joystickHandle = document.getElementById('joy-stick-thumb');
 
+// settings
 const settings_btn = document.getElementById("settings");
+const settings_back = document.getElementById("settings-back");
+
 const respawn_btn = document.getElementById("respawn");
 const fullscreen_btn = document.getElementById("fullscreen");
 
@@ -46,7 +49,7 @@ window.addEventListener('resize', checkOrientation);
 settings_btn.addEventListener("click", ()=>{console.log("settings")})
 
 joystickHandle.addEventListener('mousedown', handleJoystickPress);
-main.addEventListener('touchstart', (event) => {
+document.body.addEventListener('touchstart', (event) => {
     event.preventDefault();
     let touches = event.touches;
     console.log("touch start", touches);
@@ -73,6 +76,10 @@ main.addEventListener('touchstart', (event) => {
                 break;
 
             case "settings":
+                toggleSettings();
+                break;
+
+            case "settings-back":
                 toggleSettings();
                 break;
 
@@ -122,30 +129,36 @@ document.addEventListener('touchmove', handleJoystickMove);
 
 // functions
 function toggleSettings() {
-    settingsOverlay != settingsOverlay;
+    settingsOverlay = !settingsOverlay;
+    console.log(settingsOverlay);
     if (settingsOverlay) {
         console.log("Showing settings...");
-        document.querySelector(".overlay-container").classList.add('x');
-        document.getElementById("settings-overlay").classList.remove('a');
-    } else {
-        console.log("Closing settings...");
         document.querySelector(".overlay-container").classList.remove('x');
         document.getElementById("settings-overlay").classList.add('a');
+    } else {
+        console.log("Closing settings...");
+        document.querySelector(".overlay-container").classList.add('x');
+        document.getElementById("settings-overlay").classList.remove('a');
     }
 }
 
 function checkOrientation() {
     if (window.innerWidth > window.innerHeight) {
+        if (!settingsOverlay) {
+            document.querySelector(".overlay-container").classList.add('x');
+            document.getElementById("orientation-overlay").classList.remove('a');
+        }
         console.log("Landscape orientation");
-        document.querySelector(".overlay-container").classList.add('x');
-        document.getElementById("orientation-overlay").classList.remove('a');
         // Your code for landscape orientation
         main.classList.remove("portrait")
     } else {
         console.log("Portrait orientation");
-        document.querySelector(".overlay-container").classList.remove('x');
-        document.getElementById("orientation-overlay").classList.add('a');
-        // Your code for portrait orientation
+        
+        if (!settingsOverlay) {
+            document.querySelector(".overlay-container").classList.remove('x');
+            document.getElementById("orientation-overlay").classList.add('a');
+            // Your code for portrait orientation
+        }
         main.classList.add("portrait");
         //main.style.left = `${(window.innerWidth - window.innerHeight) / 2}px`
     }

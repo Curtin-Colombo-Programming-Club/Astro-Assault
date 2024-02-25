@@ -23,7 +23,7 @@ def eventManager(sio):
 
     @sio.on("pong", namespace="/game")
     def on_pong(data):
-        print(data)
+        #print(data)
         Screen.PING = time.time() - float(data["start"])
 
     @sio.on('new_ship', namespace='/game')

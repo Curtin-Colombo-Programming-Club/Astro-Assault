@@ -1,4 +1,6 @@
+import threading
 from os import environ
+
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 import math
@@ -7,6 +9,10 @@ import pygame
 import random
 from typing import Self
 import Screen
+
+
+def updatex(_sprites: list["_DynamicSprite"]):
+    ...
 
 
 class _StaticSprite(pygame.sprite.Sprite):
@@ -371,6 +377,12 @@ class _Group(pygame.sprite.Group):
         """
         _screen = kwargs["_screen"]
         _special_flags = kwargs.get("special_flags", 0)
+        """_iters = _nt if (_nt := Screen.MAX_NO_THREADS) <= (_ns := len(_sprites := self.sprites())) else _ns
+        _step = int(_ns / _iters)
+        _threads = []
+        for i in range(_iters):
+            _threads.append(_t := threading.Thread(target=updatex, args=(_sprites[i*_step:(i+1)*_step])))"""
+
         for sprite in self.sprites():
             sprite.update(_screen=_screen)
             _screen.blit(sprite.image, sprite.rect, None, _special_flags)
@@ -896,6 +908,13 @@ class Ship(_DynamicSprite):
         Screen.FORCES.newForce(_color=(0, 0, 255), _text="Fe")
 
     def __set_player_color(self):
+        self._im = pygame.transform.scale(
+            _im := pygame.image.load(f"{os.path.dirname(__file__)}/images/ship.svg"),
+            (
+                _im.get_width() * Screen.C_RATIO * Screen.W_RATIO,
+                _im.get_height() * Screen.C_RATIO * Screen.H_RATIO
+            )
+        )
         _player_color_mask = pygame.transform.scale(
             pygame.image.load(os.path.relpath(f"{os.path.dirname(__file__)}/images/player_color_mask.svg")),
             (
@@ -905,8 +924,10 @@ class Ship(_DynamicSprite):
         for x in range(_width):
             for y in range(_height):
                 if _p_c_m_a := _player_color_mask.get_at((x, y))[3] / 255:
-                    self._im.set_at((x, y), (
-                    self.__color[0] * _p_c_m_a, self.__color[1] * _p_c_m_a, self.__color[2] * _p_c_m_a, 255))
+                    self._im.set_at(
+                        (x, y),
+                        (self.__color[0] * _p_c_m_a, self.__color[1] * _p_c_m_a, self.__color[2] * _p_c_m_a, 255)
+                    )
         self._imc = self._im
 
     @property
@@ -1122,4 +1143,3 @@ def check_collision(_TSprite: Laser | Missile, _TSprite2: Ship) -> bool:
             pass
     else:
         return False
-

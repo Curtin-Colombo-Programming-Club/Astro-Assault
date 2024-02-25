@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import Screen
 from Screen.utils import *
 import sys
@@ -8,6 +6,7 @@ from Screen.sock import *
 import Screen.sock as sock
 import socketio
 import os
+import threading
 
 
 NAME: str = ""
@@ -31,6 +30,12 @@ p_H_RATIO = H_RATIO
 W_RATIO = WIDTH / 1920
 p_W_RATIO = W_RATIO
 C_RATIO = 2 / 3
+
+SCREEN_LOCK: threading.Lock = threading.Lock()
+MAX_NO_THREADS: int = 4
+THREADS: list[threading.Thread] = []
+#MULT_MANAGER: multiprocessing.Manager = multiprocessing.Manager()
+#MULT_QUE: multiprocessing.Queue = multiprocessing.Queue()
 
 OFFLINE_SHIPS: SimpleShips | None = None
 DEAD_SHIPS: SimpleShips | None = None
@@ -178,7 +183,7 @@ def run():
 
         # Render ping text
         if _ping_repeat_tracker >= 1:
-            print("ping sending")
+            #print("ping sending")
             _ping_repeat_tracker = 0
             Screen.sio.emit("ping", {"start": str(time.time()), "token": Screen.TOKEN}, namespace="/game")
         ping_text = pygame.transform.scale(
@@ -196,6 +201,9 @@ def run():
         ping_rect.right = Screen.WIDTH - 10 * Screen.W_RATIO
         ping_rect.top = 10 * Screen.H_RATIO
         screen.blit(ping_text, ping_rect)
+
+        # ---
+        [_t.join() for _t in Screen.THREADS]
 
         # Update the display
         pygame.display.update()
